@@ -1,0 +1,11 @@
+debugging/
+work/
+original-archives/binaries/*
+original-archives/sources/*
+ReleasePackage/bin/*
+ReleasePackage/lib/
+ReleasePackage/share/
+
+.pacman-installed
+log.txt
+run_fontforge.exe

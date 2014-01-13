@@ -1,0 +1,10 @@
+--- libICE-1.0.8/src/ICElibint.h	2014-01-09 11:40:39.407226500 +0800
++++ libICE-1.0.8-a/src/ICElibint.h	2014-01-09 11:40:45.513671800 +0800
+@@ -38,6 +38,7 @@
+ #include <X11/ICE/ICEutil.h>
+ #ifdef WIN32
+ #include <X11/Xwindows.h>
++#include <process.h>
+ #endif
+ 
+ #include <stdlib.h>
