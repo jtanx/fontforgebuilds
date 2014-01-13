@@ -1,0 +1,30 @@
+Place the following files in this folder:
+freetype-2.5.2.tar.bz2: https://sourceforge.net/projects/freetype/files/freetype2/
+pango-1.36.1.tar.xz: http://ftp.gnome.org/pub/gnome/sources/pango/
+
+Place the following files in X.Org/proto:
+Get from:
+http://ftp.x.org/pub/individual/proto/
+bigreqsproto-1.1.2.tar.bz2
+inputproto-2.3.tar.bz2
+kbproto-1.0.6.tar.bz2
+xcmiscproto-1.2.2.tar.bz2
+xproto-7.0.25.tar.bz2
+xextproto-7.3.0.tar.bz2
+renderproto-0.11.1.tar.bz2
+
+Place the following files in X.org/lib:
+Get from:
+http://ftp.x.org/pub/individual/lib/
+xtrans-1.3.2.tar.bz2
+libXau-1.0.8.tar.bz2
+libXdmcp-1.1.1.tar.bz2
+libX11-1.3.6.tar.bz2
+libxkbfile-1.0.8.tar.bz2
+libxkbui-1.0.2.tar.bz2
+libXext-1.3.2.tar.bz2
+libXrender-0.9.8.tar.bz2
+libXft-2.3.1.tar.bz2
+
+libICE-1.0.8.tar.bz2
+libSM-1.2.2.tar.bz2

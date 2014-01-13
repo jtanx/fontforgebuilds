@@ -32,6 +32,7 @@ Build instructions:
    home directory.
      - e.g: Extract ffbuild.zip to C:\msys\home\your_username\ffbuild
      - You should be able to see this folder from the shell when you type `ls`.
-4.  
+4. Follow original-archives/binaries/binaries.txt and
+   original-archives/sources/sources.txt to retrieve the required source files.
 5. In the shell, enter the directory (e.g `cd ffbuild`) and run the build script:
      - ./ffbuild.sh
