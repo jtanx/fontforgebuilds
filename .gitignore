@@ -5,6 +5,7 @@ original-archives/sources/*
 ReleasePackage/bin/*
 ReleasePackage/lib/
 ReleasePackage/share/
+ReleasePackage/VERSION.txt
 
 .pacman-installed
 log.txt
