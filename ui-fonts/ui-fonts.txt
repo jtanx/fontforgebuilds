@@ -1,0 +1,22 @@
+Place fonts that you want FontForge to use for its user
+interface here. Common fonts to include would be:
+* Cantarell (Main UI font)
+* Inconsolata (Main monospace UI font)
+* DejaVu Sans/Serif
+* WenQuanYi / DroidSansFallbackFull (CJK fonts + a lot more)
+
+http://levien.com/type/myfonts/inconsolata.html
+https://sourceforge.net/projects/wqy/
+
+If you instead wish for FontForge to use the Windows font
+folder, you must manually enable this. This is disabled by
+default because FontForge uses FontConfig, which scans the
+Windows font directory every time a new font is added or
+removed. This is a very slow process, and can take quite a
+few minutes for FontForge to load on startup (it can take
+up to 10 minutes, or even more!), which makes it appear as if
+FontForge is freezing.
+
+To enable scanning of the Windows font directory, edit the file
+'fonts.conf', located in etc/fonts/fonts.conf, and uncomment
+the appropriate line (follow instructions in that file).

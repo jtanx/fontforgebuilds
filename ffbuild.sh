@@ -17,6 +17,7 @@ reconfigure="$1"
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PATCH=$BASE/patches
 WORK=$BASE/work
+UIFONTS=$BASE/ui-fonts
 SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
@@ -275,35 +276,14 @@ install_source pango-1.36.1.tar.xz "" "--with-xft"
 #install_git_source "https://github.com/zeromq/czmq" "czmq" "libtoolize -i && ./autogen.sh"
 
 
-log_note "Installing custom binaries..."
-cd $WORK
-
-# potrace - http://potrace.sourceforge.net/#downloading
-if [ ! -d potrace ]; then
-    log_status "Installing potrace..."
-    mkdir potrace
-    cd potrace
-    tar axvf $BINARY/potrace-1.11.win32.tar.gz
-    strip potrace-1.11.win32/potrace.exe -o $RELEASE/bin/potrace.exe
-    cd ..
-fi
-
-#VcXsrv - Xming replacement
-if [ ! -d VcXsrv ]; then
-    log_status "Installing VcXsrv..."
-    tar axvf $BINARY/VcXsrv-1.14.2-minimal.tar.bz2
-    cp -rf VcXsrv $RELEASE/bin/
-fi
-
 # VcXsrv_close
 if [ ! -f VcXsrv_close/VcXsrv_close.complete ]; then
-    log_status "Installing VcXsrv_close..."
+    log_status "Building VcXsrv_close..."
     mkdir -p VcXsrv_close
     cd VcXsrv_close
     gcc -Wall -O2 -municode \
         -o VcXsrv_close.exe "$PATCH/VcXsrv_close.c" \
     || bail "VcXsrv_close"
-    strip VcXsrv_close.exe -so "$RELEASE/bin/VcxSrv_close.exe" || bail "VcxSrv_close"
     touch VcXsrv_close.complete
     cd ..
 fi
@@ -316,7 +296,6 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
     windres "$PATCH/run_fontforge.rc" -O coff -o run_fontforge.res
     gcc -Wall -O2 -mwindows -o run_fontforge.exe "$PATCH/run_fontforge.c" run_fontforge.res \
     || bail "run_fontforge"
-    strip run_fontforge.exe -so "$RELEASE/run_fontforge.exe"
     touch run_fontforge.complete
     cd ..
 fi
@@ -349,6 +328,8 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     fi
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
+    # windows-cross-compile to disable check for libuuid
+    
     # Crappy hack to get around forward slash in path issues 
     #am_cv_python_pythondir=/usr/lib/python2.7/site-packages \
     #am_cv_python_pyexecdir=/usr/lib/python2.7/site-packages \
@@ -392,23 +373,50 @@ strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
 log_status "Copying the libraries required by FontForge..."
 for f in $fflibs; do
     filename="$(basename $f)"
-   #echo $filename
     strip "$f" -so "$RELEASE/bin/$filename"
-    #cp -fv "$f" "$RELEASE/bin"
 done
 
 log_status "Copying the shared folder of FontForge..."
 cp -rf /usr/share/share_ff/fontforge "$RELEASE/share"
 cp -rf /usr/share/share_ff/locale "$RELEASE/share"
 
+log_note "Installing custom binaries..."
+cd $WORK
+# potrace - http://potrace.sourceforge.net/#downloading
+if [ ! -f $RELEASE/bin/potrace.exe ]; then
+    log_status "Installing potrace..."
+    mkdir -p potrace
+    cd potrace
+    if [ ! -d potrace-1.11.win32 ]; then
+        tar axvf $BINARY/potrace-1.11.win32.tar.gz
+    fi
+    strip potrace-1.11.win32/potrace.exe -so $RELEASE/bin/potrace.exe
+    cd ..
+fi
 
+#VcXsrv - Xming replacement
+if [ ! -d $RELEASE/bin/VcXsrv ]; then
+    log_status "Installing VcXsrv..."
+    if [ ! -d VcXsrv ]; then
+        tar axvf $BINARY/VcXsrv-1.14.2-minimal.tar.bz2
+    fi
+    cp -rf VcXsrv $RELEASE/bin/
+fi
+
+log_status "Installing VcXsrv_close..."
+strip $WORK/VcXsrv_close/VcXsrv_close.exe -so "$RELEASE/bin/VcxSrv_close.exe" \
+    || bail "VcxSrv_close"
+log_status "Installing run_fontforge..."
+strip $WORK/run_fontforge/run_fontforge.exe -so "$RELEASE/run_fontforge.exe" \
+    || bail "run_fontforge"
 
 log_status "Copying the Pango modules..."
 cp -rf /usr/local/lib/pango "$RELEASE/lib"
 
 log_status "Copying UI fonts..."
 mkdir -p "$RELEASE/share/fonts"
-cp "$RELEASE/share/fontforge/pixmaps"/Cantarell* "$RELEASE/share/fonts/"
+cp "$UIFONTS"/* "$RELEASE/share/fonts/"
+cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
 
 log_note "Build complete."
 
