@@ -4,7 +4,7 @@
 #define MyAppName "FontForge"
 #define MyAppFolder "FontForgeBuilds"
 #define MyAppVersion GetDateTimeString('dd-mm-yyyy', '', '');
-#define MyAppPublisher "caketrim"
+#define MyAppPublisher "FontForgeBuilds"
 #define MyAppURL "http://www.fontforge.org"
 #define MyAppExeName "run_fontforge.exe"
 
@@ -70,6 +70,7 @@ Source: "fontforge.bat"; DestDir: "{app}"; Flags: ignoreversion;
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName} console"; Filename: "{app}\fontforge.bat"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
@@ -90,8 +91,7 @@ begin
   begin
     if MsgBox('Do you want to remove user preferences?', mbConfirmation, MB_YESNO) = IDYES then
     begin
-      MsgBox('{userappdata}\FontForge', mbInformation, MB_OK);
-      DelTree('{userappdata}\FontForge', True, True, True);
+      DelTree(ExpandConstant('{userappdata}\FontForge'), True, True, True);
     end;
   end;
 end;
