@@ -64,7 +64,8 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Name: "quicklaunchicon"; Description: "{cm:CreateQuickLaunchIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked; OnlyBelowVersion: 0,6.1
 
 [Files]
-Source: "..\ReleasePackage\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+Source: "..\ReleasePackage\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs; Excludes: "fontforge.bat"
+Source: "fontforge.bat"; DestDir: "{app}"; Flags: ignoreversion;
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -82,3 +83,15 @@ Root: HKCR; Subkey: "FontForgeProject\shell\open\command"; ValueType: string; Va
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
+[Code]
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if CurUninstallStep = usUninstall then
+  begin
+    if MsgBox('Do you want to remove user preferences?', mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      MsgBox('{userappdata}\FontForge', mbInformation, MB_OK);
+      DelTree('{userappdata}\FontForge', True, True, True);
+    end;
+  end;
+end;
