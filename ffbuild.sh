@@ -276,15 +276,15 @@ install_source pango-1.36.1.tar.xz "" "--with-xft"
 #install_git_source "https://github.com/zeromq/czmq" "czmq" "libtoolize -i && ./autogen.sh"
 
 
-# VcXsrv_close
-if [ ! -f VcXsrv_close/VcXsrv_close.complete ]; then
-    log_status "Building VcXsrv_close..."
-    mkdir -p VcXsrv_close
-    cd VcXsrv_close
+# VcXsrv_util
+if [ ! -f VcXsrv_util/VcXsrv_util.complete ]; then
+    log_status "Building VcXsrv_util..."
+    mkdir -p VcXsrv_util
+    cd VcXsrv_util
     gcc -Wall -O2 -municode \
-        -o VcXsrv_close.exe "$PATCH/VcXsrv_close.c" \
-    || bail "VcXsrv_close"
-    touch VcXsrv_close.complete
+        -o VcXsrv_util.exe "$PATCH/VcXsrv_util.c" \
+    || bail "VcXsrv_util"
+    touch VcXsrv_util.complete
     cd ..
 fi
 
@@ -334,8 +334,8 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     #am_cv_python_pythondir=/usr/lib/python2.7/site-packages \
     #am_cv_python_pyexecdir=/usr/lib/python2.7/site-packages \
     ./configure $HOST \
-        --enable-shared \
         --disable-static \
+        --enable-shared \
         --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
         --without-cairo \
@@ -377,8 +377,9 @@ for f in $fflibs; do
 done
 
 log_status "Copying the shared folder of FontForge..."
-cp -rf /usr/share/share_ff/fontforge "$RELEASE/share"
-cp -rf /usr/share/share_ff/locale "$RELEASE/share"
+cp -rf /usr/share/share_ff/fontforge "$RELEASE/share/"
+cp -rf /usr/share/share_ff/locale "$RELEASE/share/"
+rm -f "$RELEASE/share/prefs"
 
 log_note "Installing custom binaries..."
 cd $WORK
@@ -403,9 +404,9 @@ if [ ! -d $RELEASE/bin/VcXsrv ]; then
     cp -rf VcXsrv $RELEASE/bin/
 fi
 
-log_status "Installing VcXsrv_close..."
-strip $WORK/VcXsrv_close/VcXsrv_close.exe -so "$RELEASE/bin/VcxSrv_close.exe" \
-    || bail "VcxSrv_close"
+log_status "Installing VcXsrv_util..."
+strip $WORK/VcXsrv_util/VcXsrv_util.exe -so "$RELEASE/bin/VcxSrv_util.exe" \
+    || bail "VcxSrv_util"
 log_status "Installing run_fontforge..."
 strip $WORK/run_fontforge/run_fontforge.exe -so "$RELEASE/run_fontforge.exe" \
     || bail "run_fontforge"
@@ -417,6 +418,14 @@ log_status "Copying UI fonts..."
 mkdir -p "$RELEASE/share/fonts"
 cp "$UIFONTS"/* "$RELEASE/share/fonts/"
 cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
+
+log_status "Copying sfd icon..."
+cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
+
+log_status "Setting the git version number..."
+version_hash=`git -C $WORK/fontforge rev-parse master`
+current_date=`date "+%c %z"`
+sed -bi "s/git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
 
 log_note "Build complete."
 

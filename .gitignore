@@ -6,7 +6,8 @@ ReleasePackage/bin/*
 ReleasePackage/lib/
 ReleasePackage/share/
 ReleasePackage/VERSION.txt
+fontforge-setup/*.exe
 
 .pacman-installed
-log.txt
+log*.txt
 run_fontforge.exe
