@@ -1,3 +1,5 @@
+07-02-14:
+* Updated to the latest git version cae2da3
 17-01-14:
 * Fixed folder browser 'up' button when on the default folder
 * Set preferences to %APPDATA\FontForge for the installed

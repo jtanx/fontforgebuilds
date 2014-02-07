@@ -84,7 +84,8 @@ if [ ! -f $BASE/.pacman-installed ]; then
 
     # Add the mingw repository and update pacman.
     # Also updates all packages to the latest.
-    cp -f $PATCH/pacman.conf /etc/
+    # Not needed anymore with latest version of MSYS2
+    # cp -f $PATCH/pacman.conf /etc/
     pacman -Sy --noconfirm
 
     IOPTS="-S --noconfirm --needed"
@@ -323,8 +324,8 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     log_status "Running the configure script..."
     
     if [ ! -f configure ]; then
-        log_note "No configure script detected; running ./autogen.sh..."
-        ./autogen.sh || bail "FontForge autogen"
+        log_note "No configure script detected; running ./boostrap..."
+        ./bootstrap || bail "FontForge autogen"
     fi
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)

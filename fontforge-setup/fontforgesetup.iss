@@ -28,7 +28,7 @@ InfoBeforeFile=..\ReleasePackage\VERSION.txt
 OutputDir=.
 OutputBaseFilename=FontForgeSetup-{#MyAppVersion}
 SetupIconFile=Graphics\fontforge-installer-icon.ico
-Compression=lzma
+Compression=lzma2/max
 SolidCompression=yes
 ChangesAssociations=yes
 
