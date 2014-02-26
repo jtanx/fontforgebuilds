@@ -71,6 +71,7 @@ Source: "fontforge.bat"; DestDir: "{app}"; Flags: ignoreversion;
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
 Name: "{group}\{#MyAppName} console"; Filename: "{app}\fontforge.bat"
+Name: "{group}\{#MyAppName} interactive console"; Filename: "{app}\fontforge-console.bat"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon

@@ -53,7 +53,6 @@ mkdir -p "$WORK"
 mkdir -p "$RELEASE/bin"
 mkdir -p "$RELEASE/lib"
 mkdir -p "$RELEASE/share"
-mkdir -p "$RELEASE/lib"
 
 # Red text
 function log_error() {
@@ -79,7 +78,6 @@ log_note "MSYS2 FontForge build script..."
 
 # Install all the available precompiled binaries
 if [ ! -f $BASE/.pacman-installed ]; then
-    touch $BASE/.pacman-installed
     log_status "First time run; installing MSYS and MinGW libraries..."
 
     # Add the mingw repository and update pacman.
@@ -112,7 +110,7 @@ if [ ! -f $BASE/.pacman-installed ]; then
 
     #log_status "Patching faulty pyconfig.h..."
     #patch -p0 /include/python2.7/pyconfig.h $PATCH/pyconfig.patch
-    
+    touch $BASE/.pacman-installed
     log_note "Finished installing precompiled libraries!"
 else
     log_note "Detected that precompiled libraries are already installed."
@@ -211,8 +209,8 @@ function install_git_source () {
 }
 
 log_status "Installing custom libraries..."
-install_git_source "http://github.com/fontforge/libspiro" "libspiro" "autoreconf -i && automake --foreign -Wall"
-install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "autoreconf -i && automake --foreign"
+install_git_source "http://github.com/fontforge/libspiro" "libspiro" "libtoolize -i && autoreconf -i && automake --foreign -Wall"
+install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "libtoolize -i && autoreconf -i && automake --foreign"
 
 
 # X11 libraries
@@ -326,6 +324,8 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     if [ ! -f configure ]; then
         log_note "No configure script detected; running ./boostrap..."
         ./bootstrap || bail "FontForge autogen"
+        log_note "Patching lib files to use <fontforge-config.h>..."
+        sed -bi "s/<config\.h>/<fontforge-config.h>/" lib/*.c
     fi
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
@@ -340,8 +340,6 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
         --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
         --without-cairo \
-        --disable-python-scripting \
-        --disable-python-extension \
         --without-libzmq \
         --with-freetype-source="$WORK/freetype-2.5.2" \
         --without-libreadline \
@@ -350,14 +348,14 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-make -j 4	|| bail "FontForge make"
+#make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-make -j 4 install || bail "FontForge install"
+#make -j 4 install || bail "FontForge install"
 
 
 log_status "Assembling the release package..."
-ffex=`which fontforge`
+ffex=`which fontforge.exe`
 fflibs=`ldd "$ffex" \
 | grep dll \
 | sed -e '/^[^\t]/ d'  \
@@ -422,6 +420,13 @@ cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
 
 log_status "Copying sfd icon..."
 cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
+
+log_status "Copying the Python libraries..."
+if [ -d "$RELEASE/lib/python2.7" ]; then
+    log_note "Skipping python library copy because folder already exists, and copying is slow."
+else  
+    cp -r "$BINARY/python2.7" "$RELEASE/lib"
+fi
 
 log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
