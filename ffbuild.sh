@@ -27,7 +27,7 @@ HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32
 export PKG_CONFIG_PATH=/mingw32/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig
 
 # Compiler flags
-export LDFLAGS="-L/mingw32/lib -L/usr/local/lib -L/lib -Wl,--no-undefined"
+export LDFLAGS="-L/mingw32/lib -L/usr/local/lib -L/lib" 
 export CFLAGS="-DWIN32 -I/mingw32/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
@@ -106,7 +106,7 @@ if [ ! -f $BASE/.pacman-installed ]; then
     pacman $IOPTS mingw-w64-i686-zlib mingw-w64-i686-libpng mingw-w64-i686-giflib mingw-w64-i686-libtiff
     pacman $IOPTS mingw-w64-i686-libjpeg-turbo mingw-w64-i686-libxml2 mingw-w64-i686-freetype
     pacman $IOPTS mingw-w64-i686-fontconfig mingw-w64-i686-glib2
-    pacman $IOPTS mingw-w64-i686-harfbuzz
+    pacman $IOPTS mingw-w64-i686-harfbuzz mingw-w64-i686-gc #BDW Garbage collector
 
     #log_status "Patching faulty pyconfig.h..."
     #patch -p0 /include/python2.7/pyconfig.h $PATCH/pyconfig.patch
@@ -323,9 +323,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     
     if [ ! -f configure ]; then
         log_note "No configure script detected; running ./boostrap..."
+        #./autogen.sh || bail "FontForge autogen"
         ./bootstrap || bail "FontForge autogen"
-        log_note "Patching lib files to use <fontforge-config.h>..."
-        sed -bi "s/<config\.h>/<fontforge-config.h>/" lib/*.c
+        #log_note "Patching lib files to use <fontforge-config.h>..."
+        #sed -bi "s/<config\.h>/<fontforge-config.h>/" lib/*.c
     fi
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
@@ -335,8 +336,8 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     #am_cv_python_pythondir=/usr/lib/python2.7/site-packages \
     #am_cv_python_pyexecdir=/usr/lib/python2.7/site-packages \
     ./configure $HOST \
-        --disable-static \
         --enable-shared \
+        --disable-static \
         --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
         --without-cairo \
@@ -348,10 +349,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-#make -j 4	|| bail "FontForge make"
+make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-#make -j 4 install || bail "FontForge install"
+make -j 4 install || bail "FontForge install"
 
 
 log_status "Assembling the release package..."
