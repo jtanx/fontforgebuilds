@@ -349,10 +349,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-make -j 4	|| bail "FontForge make"
+#make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-make -j 4 install || bail "FontForge install"
+#make -j 4 install || bail "FontForge install"
 
 
 log_status "Assembling the release package..."
@@ -432,7 +432,11 @@ fi
 log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
 current_date=`date "+%c %z"`
-sed -bi "s/git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
+if [ ! -f $RELEASE/VERSION.txt ]; then
+	printf "FontForge Windows build\ngit " > $RELEASE/VERSION.txt
+fi
+
+sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
 
 log_note "Build complete."
 
