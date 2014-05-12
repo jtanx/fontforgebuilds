@@ -1,5 +1,5 @@
 Place the following files in this folder:
-freetype-2.5.2.tar.bz2: https://sourceforge.net/projects/freetype/files/freetype2/
+freetype-2.5.3.tar.bz2: https://sourceforge.net/projects/freetype/files/freetype2/
 pango-1.36.3.tar.xz: http://ftp.gnome.org/pub/gnome/sources/pango/
 
 Place the following files in X.Org/proto:

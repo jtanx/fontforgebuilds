@@ -300,9 +300,9 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
 fi
 
 # For the source only; to enable the debugger in FontForge
-if [ ! -d freetype-2.5.2 ]; then
-    log_status "Extracting the FreeType 2.5.2 source..."
-    tar axvf "$SOURCE/freetype-2.5.2.tar.bz2" || bail "FreeType2 extraction"
+if [ ! -d freetype-2.5.3 ]; then
+    log_status "Extracting the FreeType 2.5.3 source..."
+    tar axvf "$SOURCE/freetype-2.5.3.tar.bz2" || bail "FreeType2 extraction"
 fi
 
 log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -342,7 +342,7 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
         --datarootdir=/usr/share/share_ff \
         --without-cairo \
         --without-libzmq \
-        --with-freetype-source="$WORK/freetype-2.5.2" \
+        --with-freetype-source="$WORK/freetype-2.5.3" \
         --without-libreadline \
         || bail "FontForge configure"
     touch fontforge.configure-complete
