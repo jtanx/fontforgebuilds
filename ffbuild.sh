@@ -225,12 +225,12 @@ install_source $xproto/bigreqsproto-1.1.2.tar.bz2
 install_source $xproto/inputproto-2.3.tar.bz2
 install_source $xproto/kbproto-1.0.6.tar.bz2
 install_source $xproto/xcmiscproto-1.2.2.tar.bz2
-install_source $xproto/xproto-7.0.25.tar.bz2
+install_source $xproto/xproto-7.0.26.tar.bz2
 install_source $xproto/xextproto-7.3.0.tar.bz2
 install_source $xproto/renderproto-0.11.1.tar.bz2
 
 # Download from: http://xorg.freedesktop.org/releases/individual/lib
-install_source $xlib/xtrans-1.3.2.tar.bz2
+install_source $xlib/xtrans-1.3.4.tar.bz2
 install_source $xlib/libXau-1.0.8.tar.bz2
 install_source $xlib/libXdmcp-1.1.1.tar.bz2
 
@@ -267,7 +267,7 @@ install_source_patch $xlib/libSM-1.2.2.tar.bz2 "" "libsm.patch"
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
-install_source pango-1.36.1.tar.xz "" "--with-xft"
+install_source pango-1.36.3.tar.xz "" "--with-xft"
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
