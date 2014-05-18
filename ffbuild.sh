@@ -53,7 +53,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 	HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
 	PMPREFIX="mingw-w64-i686"
 	PYINST=python2
-	PYVER=python-2.7
+	PYVER=python2.7
 	VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
 	
 	#Patches
@@ -64,7 +64,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
 	HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
 	PMPREFIX="mingw-w64-x86_64"
 	PYINST=python3
-	PYVER=python-3.4
+	PYVER=python3.4
 	VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
 	
 	#Patches
