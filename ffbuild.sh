@@ -435,7 +435,7 @@ log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
 current_date=`date "+%c %z"`
 if [ ! -f $RELEASE/VERSION.txt ]; then
-	printf "FontForge Windows build\ngit " > $RELEASE/VERSION.txt
+	printf "FontForge Windows build\r\n\r\ngit " > $RELEASE/VERSION.txt
 fi
 
 sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
