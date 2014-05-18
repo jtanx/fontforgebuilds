@@ -455,6 +455,10 @@ else
     cp -r "$BINARY/$PYVER" "$RELEASE/lib"
 fi
 
+log_status "Stripping Python cache files (*.pyc,*.pyo,__pycache__)..."
+find "$RELEASE/lib/$PYVER" -regextype sed -regex ".*\.py[co]" | xargs rm -rfv
+find "$RELEASE/lib/$PYVER" -name "__pycache__" | xargs rm -rfv
+
 if [ "$MSYSTEM" = "MINGW32" ]; then
 	log_status "Copying OpenSSL libraries (for Python hashlib)..."
 	strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
