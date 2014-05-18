@@ -94,7 +94,7 @@ if [ ! -f $BASE/.pacman-installed ]; then
     pacman $IOPTS automake autoconf pkg-config
 
     ## Other libs
-    pacman $IOPTS git mingw-w64-i686-python2 # libxslt docbook-xml docbook-xsl
+    pacman $IOPTS git mingw-w64-i686-python2 mingw-w64-i686-openssl # libxslt docbook-xml docbook-xsl
 
     # Install MinGW related stuff
     pacman $IOPTS binutils mingw-w64-i686-gcc mingw-w64-i686-gcc-fortran mingw-w64-i686-gmp
@@ -427,6 +427,9 @@ if [ -d "$RELEASE/lib/python2.7" ]; then
 else  
     cp -r "$BINARY/python2.7" "$RELEASE/lib"
 fi
+
+log_status "Copying OpenSSL libraries (for Python hashlib)..."
+cp /mingw32/bin/libeay32.dll "$RELEASE/bin"
 
 log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`

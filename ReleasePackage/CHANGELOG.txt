@@ -1,3 +1,11 @@
+18-02-14:
+* 32-bit: Updated to the latest git version 493c5d
+* 32-bit: Updated Python 2.7 libraries
+* 32-bit: Now includes a copy of OpenSSL 1.0.1g for Python's hashlib
+17-02-14:
+* Updated to the latest git version 493c5d
+* 64-bit: First 64-bit build! May be unstable!
+* 64-bit: Switched to Python 3.4. Removed Python2.
 07-02-14:
 * Updated to the latest git version cae2da3
 17-01-14:
