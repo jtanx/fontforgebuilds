@@ -13,6 +13,30 @@
 # Retrieve input arguments to script
 reconfigure="$1"
 
+# Colourful text
+# Red text
+function log_error() {
+    echo -e "\e[31m$@\e[0m"
+}
+
+# Yellow text
+function log_status() {
+    echo -e "\e[33m$@\e[0m"
+}
+
+# Green text
+function log_note() {
+    echo -e "\e[32m$@\e[0m"
+}
+
+function bail () {
+    echo -e "\e[31m\e[1m!!! Build failed at: ${@}\e[0m"
+    exit 1
+}
+
+# Preamble
+log_note "MSYS2 FontForge build script..."
+
 # Set working folders
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PATCH=$BASE/patches
@@ -21,14 +45,40 @@ UIFONTS=$BASE/ui-fonts
 SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
-HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
+
+# Determine if we're building 32 or 64 bit.
+if [ "$MSYSTEM" = "MINGW32" ]; then
+	log_note "Building 32-bit version!"
+	MINGVER=mingw32
+	HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
+	PMPREFIX="mingw-w64-i686"
+	PYINST=python2
+	PYVER=python-2.7
+	VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
+	
+	#Patches
+	PATCH_LIBX11="libx11.patch"
+elif [ "$MSYSTEM" = "MINGW64" ]; then
+	log_note "Building 64-bit version!"
+	MINGVER=mingw64
+	HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
+	PMPREFIX="mingw-w64-x86_64"
+	PYINST=python3
+	PYVER=python-3.4
+	VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
+	
+	#Patches
+	PATCH_XPROTO="64bit-xproto.patch"
+	PATCH_LIBX11="64bit-libx11.patch"
+else 
+	bail "Unknown build system!"
+fi
 
 # Set pkg-config path to also search mingw libs
-export PKG_CONFIG_PATH=/mingw32/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig
-
+export PKG_CONFIG_PATH=/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig
 # Compiler flags
-export LDFLAGS="-L/mingw32/lib -L/usr/local/lib -L/lib" 
-export CFLAGS="-DWIN32 -I/mingw32/include -I/usr/local/include -I/include -g"
+export LDFLAGS="-L/$MINGVER/lib -L/usr/local/lib -L/lib" 
+export CFLAGS="-DWIN32 -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
 export XPROTO_CFLAGS="${CFLAGS}"
@@ -54,28 +104,6 @@ mkdir -p "$RELEASE/bin"
 mkdir -p "$RELEASE/lib"
 mkdir -p "$RELEASE/share"
 
-# Red text
-function log_error() {
-    echo -e "\e[31m$@\e[0m"
-}
-
-# Yellow text
-function log_status() {
-    echo -e "\e[33m$@\e[0m"
-}
-
-# Green text
-function log_note() {
-    echo -e "\e[32m$@\e[0m"
-}
-
-function bail () {
-    echo -e "\e[31m\e[1m!!! Build failed at: ${@}\e[0m"
-    exit 1
-}
-
-log_note "MSYS2 FontForge build script..."
-
 # Install all the available precompiled binaries
 if [ ! -f $BASE/.pacman-installed ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
@@ -88,28 +116,26 @@ if [ ! -f $BASE/.pacman-installed ]; then
 
     IOPTS="-S --noconfirm --needed"
     # Install the base MSYS packages needed
-    pacman $IOPTS diffutils findutils gawk liblzma m4 make patch tar xz
+    pacman $IOPTS diffutils findutils gawk liblzma m4 make patch tar xz git binutils
 
     ## Automake stuff
     pacman $IOPTS automake autoconf pkg-config
 
     ## Other libs
-    pacman $IOPTS git mingw-w64-i686-python2 mingw-w64-i686-openssl # libxslt docbook-xml docbook-xsl
+    pacman $IOPTS $PMPREFIX-$PYINST $PMPREFIX-openssl # libxslt docbook-xml docbook-xsl
 
     # Install MinGW related stuff
-    pacman $IOPTS binutils mingw-w64-i686-gcc mingw-w64-i686-gcc-fortran mingw-w64-i686-gmp
-    pacman $IOPTS mingw-w64-i686-gettext mingw-w64-i686-libiconv mingw-w64-i686-libtool
+    pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gcc-fortran $PMPREFIX-gmp
+    pacman $IOPTS $PMPREFIX-gettext $PMPREFIX-libiconv $PMPREFIX-libtool
 
     log_status "Installing precompiled devel libraries..."
 
     # Libraries
-    pacman $IOPTS mingw-w64-i686-zlib mingw-w64-i686-libpng mingw-w64-i686-giflib mingw-w64-i686-libtiff
-    pacman $IOPTS mingw-w64-i686-libjpeg-turbo mingw-w64-i686-libxml2 mingw-w64-i686-freetype
-    pacman $IOPTS mingw-w64-i686-fontconfig mingw-w64-i686-glib2
-    pacman $IOPTS mingw-w64-i686-harfbuzz mingw-w64-i686-gc #BDW Garbage collector
+    pacman $IOPTS $PMPREFIX-zlib $PMPREFIX-libpng $PMPREFIX-giflib $PMPREFIX-libtiff
+    pacman $IOPTS $PMPREFIX-libjpeg-turbo $PMPREFIX-libxml2 $PMPREFIX-freetype
+    pacman $IOPTS $PMPREFIX-fontconfig $PMPREFIX-glib2
+    pacman $IOPTS $PMPREFIX-harfbuzz $PMPREFIX-gc #BDW Garbage collector
 
-    #log_status "Patching faulty pyconfig.h..."
-    #patch -p0 /include/python2.7/pyconfig.h $PATCH/pyconfig.patch
     touch $BASE/.pacman-installed
     log_note "Finished installing precompiled libraries!"
 else
@@ -212,7 +238,6 @@ log_status "Installing custom libraries..."
 install_git_source "http://github.com/fontforge/libspiro" "libspiro" "libtoolize -i && autoreconf -i && automake --foreign -Wall"
 install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "libtoolize -i && autoreconf -i && automake --foreign"
 
-
 # X11 libraries
 log_status "Installing X11 libraries..."
 
@@ -225,8 +250,9 @@ install_source $xproto/bigreqsproto-1.1.2.tar.bz2
 install_source $xproto/inputproto-2.3.tar.bz2
 install_source $xproto/kbproto-1.0.6.tar.bz2
 install_source $xproto/xcmiscproto-1.2.2.tar.bz2
-install_source $xproto/xproto-7.0.26.tar.bz2
-install_source $xproto/xextproto-7.3.0.tar.bz2
+install_source_patch $xproto/xproto-7.0.26.tar.bz2 "" "$PATCH_XPROTO"
+install_source_patch $xproto/xextproto-7.3.0.tar.bz2 "" "xext.patch"
+
 install_source $xproto/renderproto-0.11.1.tar.bz2
 
 # Download from: http://xorg.freedesktop.org/releases/individual/lib
@@ -234,12 +260,13 @@ install_source $xlib/xtrans-1.3.4.tar.bz2
 install_source $xlib/libXau-1.0.8.tar.bz2
 install_source $xlib/libXdmcp-1.1.1.tar.bz2
 
-install_source_patch $xlib/libX11-1.3.6.tar.bz2 "" "libx11.patch" \
+install_source_patch $xlib/libX11-1.3.6.tar.bz2 "" "$PATCH_LIBX11" \
     "
     --enable-static
     --without-xcb
     --disable-unix-transport
     --disable-local-transport
+    --disable-ipv6
     --disable-xf86bigfont
     --disable-loadable-xcursor
     --enable-xlocaledir
@@ -262,8 +289,8 @@ install_source $xlib/libXext-1.3.2.tar.bz2
 install_source $xlib/libXrender-0.9.8.tar.bz2
 install_source_patch $xlib/libXft-2.3.1.tar.bz2 "" "libxft.patch"
 
-install_source_patch $xlib/libICE-1.0.8.tar.bz2 "" "libice.patch"
-install_source_patch $xlib/libSM-1.2.2.tar.bz2 "" "libsm.patch"
+install_source_patch $xlib/libICE-1.0.8.tar.bz2 "" "libice.patch" "--disable-ipv6"
+install_source_patch $xlib/libSM-1.2.2.tar.bz2 "" "libsm.patch" "--disable-ipv6"
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
@@ -398,7 +425,7 @@ fi
 if [ ! -d $RELEASE/bin/VcXsrv ]; then
     log_status "Installing VcXsrv..."
     if [ ! -d VcXsrv ]; then
-        tar axvf $BINARY/VcXsrv-1.14.2-minimal.tar.bz2
+        tar axvf $BINARY/$VCXSRV
     fi
     cp -rf VcXsrv $RELEASE/bin/
 fi
@@ -422,14 +449,16 @@ log_status "Copying sfd icon..."
 cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
 
 log_status "Copying the Python libraries..."
-if [ -d "$RELEASE/lib/python2.7" ]; then
+if [ -d "$RELEASE/lib/$PYVER" ]; then
     log_note "Skipping python library copy because folder already exists, and copying is slow."
 else  
-    cp -r "$BINARY/python2.7" "$RELEASE/lib"
+    cp -r "$BINARY/$PYVER" "$RELEASE/lib"
 fi
 
-log_status "Copying OpenSSL libraries (for Python hashlib)..."
-cp /mingw32/bin/libeay32.dll "$RELEASE/bin"
+if [ "$MSYSTEM" = "MINGW32" ]; then
+	log_status "Copying OpenSSL libraries (for Python hashlib)..."
+	strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
+fi
 
 log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
