@@ -281,12 +281,12 @@ install_source_patch $xlib/libX11-1.3.6.tar.bz2 "" "$PATCH_LIBX11" \
 #install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "libtoolize -i && ./autogen.sh" "LIBS=-lxcb --disable-xf86bigfont --enable-xlocaledir"
 
 
-install_source $xlib/libX11-1.6.2.tar.bz2 "" \
-    "
-    LIBS=-lxcb
-    --disable-xf86bigfont
-    --enable-xlocaledir 
-    "
+#install_source $xlib/libX11-1.6.2.tar.bz2 "" \
+#    "
+#    LIBS=-lxcb
+#    --disable-xf86bigfont
+#    --enable-xlocaledir 
+#    "
     
 install_source $xlib/libxkbfile-1.0.8.tar.bz2
 install_source $xlib/libxkbui-1.0.2.tar.bz2
