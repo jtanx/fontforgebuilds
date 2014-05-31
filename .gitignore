@@ -1,4 +1,5 @@
 debugging/
+debugging-symbols/
 work/
 original-archives/binaries/*
 original-archives/sources/*
@@ -7,6 +8,7 @@ ReleasePackage/lib/
 ReleasePackage/share/
 ReleasePackage/VERSION.txt
 fontforge-setup/*.exe
+ui-fonts/*
 
 .pacman-installed
 log*.txt

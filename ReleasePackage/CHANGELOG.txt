@@ -1,3 +1,9 @@
+31-5-13:
+* Updated to latest git version 500723
+* TTC handling has been fixed
+* Some crashes in the Print dialogue have been fixed
+* The cursor used for scroll zooming has been fixed
+* Point snapping in the glyph editor has been fixed
 18-02-14:
 * 32-bit: Updated to the latest git version 493c5d
 * 32-bit: Updated Python 2.7 libraries

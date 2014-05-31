@@ -45,6 +45,7 @@ UIFONTS=$BASE/ui-fonts
 SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
+DBSYMBOLS=$BASE/debugging-symbols/
 
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then
@@ -103,6 +104,7 @@ mkdir -p "$WORK"
 mkdir -p "$RELEASE/bin"
 mkdir -p "$RELEASE/lib"
 mkdir -p "$RELEASE/share"
+mkdir -p "$DBSYMBOLS"
 
 # Install all the available precompiled binaries
 if [ ! -f $BASE/.pacman-installed ]; then
@@ -256,7 +258,7 @@ install_source_patch $xproto/xextproto-7.3.0.tar.bz2 "" "xext.patch"
 install_source $xproto/renderproto-0.11.1.tar.bz2
 
 # Download from: http://xorg.freedesktop.org/releases/individual/lib
-install_source $xlib/xtrans-1.3.4.tar.bz2
+install_source_patch $xlib/xtrans-1.3.4.tar.bz2 "" "xtrans.patch"
 install_source $xlib/libXau-1.0.8.tar.bz2
 install_source $xlib/libXdmcp-1.1.1.tar.bz2
 
@@ -276,12 +278,15 @@ install_source_patch $xlib/libX11-1.3.6.tar.bz2 "" "$PATCH_LIBX11" \
 #install_source $xcb/libpthread-stubs-0.3.tar.bz2
 #install_source $xcb/libxcb-1.10.tar.bz2 "" "LIBS=-lXdmcp"
 
-#install_source $xlib/libX11-1.6.2.tar.bz2 "" \
-#    "
-#    LIBS=-lxcb
-#    --disable-xf86bigfont
-#    --enable-xlocaledir 
-#    "
+#install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "libtoolize -i && ./autogen.sh" "LIBS=-lxcb --disable-xf86bigfont --enable-xlocaledir"
+
+
+install_source $xlib/libX11-1.6.2.tar.bz2 "" \
+    "
+    LIBS=-lxcb
+    --disable-xf86bigfont
+    --enable-xlocaledir 
+    "
     
 install_source $xlib/libxkbfile-1.0.8.tar.bz2
 install_source $xlib/libxkbui-1.0.2.tar.bz2
@@ -362,6 +367,7 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     # Crappy hack to get around forward slash in path issues 
     #am_cv_python_pythondir=/usr/lib/python2.7/site-packages \
     #am_cv_python_pyexecdir=/usr/lib/python2.7/site-packages \
+	PYTHON=$PYINST \
     ./configure $HOST \
         --enable-shared \
         --disable-static \
@@ -396,10 +402,17 @@ fflibs=`ldd "$ffex" \
 
 log_status "Copying the FontForge executable..."
 strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
+objcopy --only-keep-debug "$ffex" "$DBSYMBOLS/fontforge.debug"
+objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge.exe"
+#cp "$ffex" "$RELEASE/bin/"
 log_status "Copying the libraries required by FontForge..."
 for f in $fflibs; do
     filename="$(basename $f)"
+	filenoext="${filename%.*}"
     strip "$f" -so "$RELEASE/bin/$filename"
+	objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
+	objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
+	#cp "$f" "$RELEASE/bin/"
 done
 
 log_status "Copying the shared folder of FontForge..."
