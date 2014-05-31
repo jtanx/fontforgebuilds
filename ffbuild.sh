@@ -45,7 +45,7 @@ UIFONTS=$BASE/ui-fonts
 SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
-DBSYMBOLS=$BASE/debugging-symbols/
+DBSYMBOLS=$BASE/debugging-symbols/.debug/
 
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then

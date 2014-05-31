@@ -1,5 +1,5 @@
 31-5-13:
-* Updated to latest git version 500723
+* Updated to latest git version 416fb4 + snapping fix
 * TTC handling has been fixed
 * Some crashes in the Print dialogue have been fixed
 * The cursor used for scroll zooming has been fixed
