@@ -1,7 +1,7 @@
 @ECHO OFF
 set FF=%~dp0
 set PATH=%FF%\bin;%FF%\bin\VcXsrv;%PATH%
-set DISPLAY=:9.0
+set DISPLAY=127.0.0.1:9.0
 set XLOCALEDIR=%FF%\bin\VcXsrv\locale
 set AUTOTRACE=potrace
 
