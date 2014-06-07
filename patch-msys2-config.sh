@@ -12,9 +12,9 @@ if ! grep -Fxq "$irc" ~/.inputrc; then
 	bind -f ~/.inputrc
 fi
 
-npp="C:/Program Files (x86)/Notepad++/notepad++.exe"
+npp="C:/Program Files/Notepad++/notepad++.exe"
 if [ ! -f "$npp" ]; then
-	npp="C:/Program Files/Notepad++/notepad++.exe"
+	npp="C:/Program Files (x86)/Notepad++/notepad++.exe"
 	if [ ! -f "$npp" ]; then
 		npp=""
 	fi;
@@ -29,7 +29,7 @@ if [ ! -z "$npp" ]; then
 	fi;
 	
 	log_status "Using notepad++ as git editor..."
-	git config --global core.editor "'C:/Program Files (x86)/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin"
+	git config --global core.editor "'$npp' -multiInst -notabbar -nosession -noPlugin"
 fi
 
 log_status "Done."
