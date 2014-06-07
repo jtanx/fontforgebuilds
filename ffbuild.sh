@@ -75,29 +75,19 @@ else
 	bail "Unknown build system!"
 fi
 
+#Common options
+INSPREFIX="--prefix /$MINGVER"
+AMPREFIX="-I /$MINGVER/share/aclocal"
+HOST="$HOST $INSPREFIX"
+
+
 # Set pkg-config path to also search mingw libs
-export PKG_CONFIG_PATH=/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig
+export PKG_CONFIG_PATH=/$MINGVER/share/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig
 # Compiler flags
 export LDFLAGS="-L/$MINGVER/lib -L/usr/local/lib -L/lib" 
 export CFLAGS="-DWIN32 -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
-export XPROTO_CFLAGS="${CFLAGS}"
-export XPROTO_LIBS="${LDFLAGS}"
-export XKBPROTO_CFLAGS="${CFLAGS}"
-export XKBPROTO_LIBS="${LDFLAGS}"
-export XAU_CFLAGS="${CFLAGS}"
-export XAU_LIBS="${LDFLAGS}"
-export XDMCP_CFLAGS="${CFLAGS}"
-export XDMCP_LIBS="${LDFLAGS} -lws2_32"
-export XKBFILE_CFLAGS="${CFLAGS}"
-export XKBFILE_LIBS="${LDFLAGS} -lX11"
-export XKBUI_CFLAGS="${CFLAGS}"
-export XKBUI_LIBS="${LDFLAGS} -lX11 -lxkbfile"
-export X11_CFLAGS="${CFLAGS}"
-export X11_LIBS="${LDFLAGS} -lXdmcp -lXau -lpthread"
-export ICE_CFLAGS="${CFLAGS}"
-export ICE_LIBS="${LDFLAGS}"
 
 # Make the output directories
 mkdir -p "$WORK"
@@ -206,7 +196,7 @@ function install_source () {
     install_source_patch "$1" "$2" "" "${@:3}"
 }
 
-# install_source(git_link, folder_name, custom_configgen, configflags, premakeflags, postmakeflags)
+# install_source(git_link, folder_name, custom_configgen, patchfile, configflags, premakeflags, postmakeflags)
 function install_git_source () {
     cd $WORK
     
@@ -215,30 +205,42 @@ function install_git_source () {
         log_status "Cloning git repository from $1..."
         git clone "$1" "$2" || bail "Git clone of $1"
         cd "$2"
+		
+		if [ ! -z "$4" ]; then
+			log_status "Patching the repository..."
+			git apply "$PATCH/$4"
+		fi
     else
         cd "$2"
-        log_status "Attempting update of git repository..."
+        #log_status "Attempting update of git repository..."
         #git pull --rebase || log_note "Failed to update. Unstaged changes?"
     fi
     
     if [ ! -f .gen-configure-complete ]; then
         log_status "Generating configure files..."
+		libtoolize -i || bail "Failed to run libtoolize"
+		
         if [ ! -z "$3" ]; then
-            eval "$3" || bail "Failed to generate makefiles"
+			#X11 ignores the --prefix option, so...
+			if [ "$3" = "--x11" ]; then
+				autoreconf -fiv $AMPREFIX
+			else
+				eval "$3" || bail "Failed to generate makefiles"
+			fi
         else
-            ./autogen.sh || bail "Failed to autogen"
+            ./autogen.sh $INSPREFIX || bail "Failed to autogen"
         fi
         touch .gen-configure-complete
     fi
     
     cd ..
-    install_source "" "$2" "${@:4}"
+    install_source "" "$2" "${@:5}"
     
 }
 
 log_status "Installing custom libraries..."
-install_git_source "http://github.com/fontforge/libspiro" "libspiro" "libtoolize -i && autoreconf -i && automake --foreign -Wall"
-install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "libtoolize -i && autoreconf -i && automake --foreign"
+install_git_source "http://github.com/fontforge/libspiro" "libspiro" "autoreconf -i && automake --foreign -Wall"
+install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "autoreconf -i && automake --foreign"
 
 # X11 libraries
 log_status "Installing X11 libraries..."
@@ -247,59 +249,30 @@ xproto=X.Org/proto
 xlib=X.Org/lib
 xcb=X.Org/xcb
 
-# Download from: http://xorg.freedesktop.org/releases/individual/proto
-install_source $xproto/bigreqsproto-1.1.2.tar.bz2
-install_source $xproto/inputproto-2.3.tar.bz2
-install_source $xproto/kbproto-1.0.6.tar.bz2
-install_source $xproto/xcmiscproto-1.2.2.tar.bz2
-install_source_patch $xproto/xproto-7.0.26.tar.bz2 "" "$PATCH_XPROTO"
-install_source_patch $xproto/xextproto-7.3.0.tar.bz2 "" "xext.patch"
+install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros" 
+install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "--x11" "$PATCH_XPROTO"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto" "--x11"
+#install_git_source "git://anongit.freedesktop.org/xorg/doc/xorg-sgml-doctools" "xorg-sgml-doctools" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/bigreqsproto" "bigreqsproto" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto" "--x11"
+install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
 
-install_source $xproto/renderproto-0.11.1.tar.bz2
-
-# Download from: http://xorg.freedesktop.org/releases/individual/lib
-install_source_patch $xlib/xtrans-1.3.4.tar.bz2 "" "xtrans.patch"
-install_source $xlib/libXau-1.0.8.tar.bz2
-install_source $xlib/libXdmcp-1.1.1.tar.bz2
-
-install_source_patch $xlib/libX11-1.3.6.tar.bz2 "" "$PATCH_LIBX11" \
-    "
-    --enable-static
-    --without-xcb
-    --disable-unix-transport
-    --disable-local-transport
-    --disable-ipv6
-    --disable-xf86bigfont
-    --disable-loadable-xcursor
-    --enable-xlocaledir
-    "
-
-#install_source $xcb/xcb-proto-1.10.tar.bz2
-#install_source $xcb/libpthread-stubs-0.3.tar.bz2
-#install_source $xcb/libxcb-1.10.tar.bz2 "" "LIBS=-lXdmcp"
-
-#install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "libtoolize -i && ./autogen.sh" "LIBS=-lxcb --disable-xf86bigfont --enable-xlocaledir"
-
-
-#install_source $xlib/libX11-1.6.2.tar.bz2 "" \
-#    "
-#    LIBS=-lxcb
-#    --disable-xf86bigfont
-#    --enable-xlocaledir 
-#    "
-    
-install_source $xlib/libxkbfile-1.0.8.tar.bz2
-install_source $xlib/libxkbui-1.0.2.tar.bz2
-install_source $xlib/libXext-1.3.2.tar.bz2
-install_source $xlib/libXrender-0.9.8.tar.bz2
-install_source_patch $xlib/libXft-2.3.1.tar.bz2 "" "libxft.patch"
-
-install_source_patch $xlib/libICE-1.0.8.tar.bz2 "" "libice.patch" "--disable-ipv6"
-install_source_patch $xlib/libSM-1.2.2.tar.bz2 "" "libsm.patch" "--disable-ipv6"
+install_git_source "git://anongit.freedesktop.org/xcb/pthread-stubs" "xcb-pthread-stubs" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
+install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "" "LIBS=-lws2_32"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "xtrans.patch"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "" "LIBS=-lxcb"
+#	"LIBS=-lxcb --disable-unix-transport --disable-local-transport --disable-ipv6 --disable-loadable-xcursor --enable-xlocaledir"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11"
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
 install_source pango-1.36.3.tar.xz "" "--with-xft"
+
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
@@ -428,7 +401,7 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     mkdir -p potrace
     cd potrace
     if [ ! -d potrace-1.11.win32 ]; then
-        tar axvf $BINARY/potrace-1.11.win32.tar.gz
+        tar axvf $BINARY/potrace-1.11.win32.tar.gz || bail "Potrace not found!"
     fi
     strip potrace-1.11.win32/potrace.exe -so $RELEASE/bin/potrace.exe
     cd ..
@@ -438,7 +411,7 @@ fi
 if [ ! -d $RELEASE/bin/VcXsrv ]; then
     log_status "Installing VcXsrv..."
     if [ ! -d VcXsrv ]; then
-        tar axvf $BINARY/$VCXSRV
+        tar axvf $BINARY/$VCXSRV || bail "VcXsrv not found!"
     fi
     cp -rf VcXsrv $RELEASE/bin/
 fi
@@ -451,7 +424,7 @@ strip $WORK/run_fontforge/run_fontforge.exe -so "$RELEASE/run_fontforge.exe" \
     || bail "run_fontforge"
 
 log_status "Copying the Pango modules..."
-cp -rf /usr/local/lib/pango "$RELEASE/lib"
+cp -rf /$MINGVER/lib/pango "$RELEASE/lib"
 
 log_status "Copying UI fonts..."
 mkdir -p "$RELEASE/share/fonts"
