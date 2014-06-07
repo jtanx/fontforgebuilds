@@ -1,20 +1,17 @@
 An unofficial FontForge build script for Windows.
 
-This script was based on Matthew Petroff's work, although it was heavily 
-modified to accommodate for changes to the FontForge build system, and
-to also update some components to more recent versions.
+This script was based on Matthew Petroff's work, although it has
+been practically rewritten since.
 
-Matthew Petroff is the author of the icons and graphics used, 
-as well as the installer scripts:
-
-* The installer is licensed under the BSD 3-Clause license.
+Matthew Petroff is the author of the icons and graphics used:
 * The icons and graphics are licensed under the
   Creative Commons Attribution 3.0 Unported license.
 
 See here for more information: 
 https://bitbucket.org/mpetroff/unofficial-fontforge-mingw-sdk/wiki/Home
 
-The build script (ffbuild.sh) is licensed under the BSD 2-clause license.
+The build script (ffbuild.sh) and installer is licensed under the 
+BSD 2-clause license.
 
 --------------------------------------------------------------------------------
 
