@@ -1,0 +1,13 @@
+diff --git a/configure.ac b/configure.ac
+index 68c3b2f..eec72ac 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -51,7 +51,7 @@ AC_SUBST(HTML_CHECK_RESULT)
+ 
+ # Checks for pkg-config packages
+ PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.10)
+-NEEDED="pthread-stubs xau >= 0.99.2"
++NEEDED="xau >= 0.99.2"
+ PKG_CHECK_MODULES(NEEDED, $NEEDED)
+ 
+ have_xdmcp="no"

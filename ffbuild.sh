@@ -265,7 +265,7 @@ install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "
 install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
 #install_git_source "git://anongit.freedesktop.org/xcb/pthread-stubs" "xcb-pthread-stubs" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
-install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "" \
+install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "libxcb.patch" \
 "
 LIBS=-lws2_32
 --disable-composite
