@@ -56,6 +56,8 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 	PYINST=python2
 	PYVER=python2.7
 	VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
+	POTRACE_DIR="potrace-1.11.win32"
+	POTRACE_ARC="$POTRACE_DIR.tar.gz"
 	
 	#Patches
 	PATCH_LIBX11="libx11.patch"
@@ -67,6 +69,8 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
 	PYINST=python3
 	PYVER=python3.4
 	VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
+	POTRACE_DIR="potrace-1.11.win64"
+	POTRACE_ARC="$PORTACE_DIR.tar.gz"
 	
 	#Patches
 	PATCH_XPROTO="64bit-xproto.patch"
@@ -259,20 +263,46 @@ install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputp
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
-
-install_git_source "git://anongit.freedesktop.org/xcb/pthread-stubs" "xcb-pthread-stubs" "--x11"
+#install_git_source "git://anongit.freedesktop.org/xcb/pthread-stubs" "xcb-pthread-stubs" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
-install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "" "LIBS=-lws2_32"
+install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "" \
+"
+LIBS=-lws2_32
+--disable-composite
+--disable-damage
+--disable-dpms
+--disable-dri2
+--disable-dri3
+--disable-glx
+--disable-present
+--disable-randr
+--disable-record
+--disable-render
+--disable-resource
+--disable-screensaver
+--disable-shape
+--disable-shm
+--disable-sync
+--disable-xevie
+--disable-xfixes
+--disable-xfree86-dri
+--disable-xinerama
+--disable-xinput
+--disable-xprint
+--disable-selinux
+--disable-xtest
+--disable-xv
+--disable-xvmc
+"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "xtrans.patch"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "" "LIBS=-lxcb"
-#	"LIBS=-lxcb --disable-unix-transport --disable-local-transport --disable-ipv6 --disable-loadable-xcursor --enable-xlocaledir"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "" 
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11"
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
-install_source pango-1.36.3.tar.xz "" "--with-xft"
-
+install_source pango-1.36.3.tar.xz "" "--with-xft --without-cairo"
+#install_git_source "https://git.gnome.org/browse/pango" "pango" "--x11" "" "--with-xft"
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
@@ -400,10 +430,11 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     log_status "Installing potrace..."
     mkdir -p potrace
     cd potrace
-    if [ ! -d potrace-1.11.win32 ]; then
-        tar axvf $BINARY/potrace-1.11.win32.tar.gz || bail "Potrace not found!"
+	
+    if [ ! -d $POTRACE_DIR ]; then
+        tar axvf $BINARY/$POTRACE_ARC || bail "Potrace not found!"
     fi
-    strip potrace-1.11.win32/potrace.exe -so $RELEASE/bin/potrace.exe
+    strip $POTRACE_DIR/potrace.exe -so $RELEASE/bin/potrace.exe
     cd ..
 fi
 
