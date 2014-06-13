@@ -1,6 +1,7 @@
 debugging/
 debugging-symbols/.debug/
 work/
+target/
 original-archives/binaries/*
 original-archives/sources/*
 ReleasePackage/bin/*

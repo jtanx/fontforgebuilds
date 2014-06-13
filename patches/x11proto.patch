@@ -1,0 +1,81 @@
+diff --git a/X.h b/X.h
+index 5cf695d..567cee1 100644
+--- a/X.h
++++ b/X.h
+@@ -67,7 +67,7 @@ typedef unsigned long XID;
+ #  endif
+ #  ifndef _XTYPEDEF_MASK
+ #    define _XTYPEDEF_MASK
+-typedef unsigned long Mask;
++#      define Mask unsigned long
+ #  endif
+ #  ifndef _XTYPEDEF_ATOM
+ #    define _XTYPEDEF_ATOM
+diff --git a/Xthreads.h b/Xthreads.h
+index 2027127..355ca5f 100644
+--- a/Xthreads.h
++++ b/Xthreads.h
+@@ -94,7 +94,7 @@ extern xthread_t (*_x11_thr_self)();
+ #   define xcondition_signal(cv) cond_signal(cv)
+ #   define xcondition_broadcast(cv) cond_broadcast(cv)
+ #  else /* !SVR4 */
+-#   ifdef WIN32
++#   if defined(WIN32) && !defined(__MINGW32__)
+ #    include <X11/Xwindows.h>
+ typedef DWORD xthread_t;
+ typedef DWORD xthread_key_t;
+@@ -260,6 +260,9 @@ static xthread_t _X_no_thread_id;
+ #       define xthread_clear_id(id) id = _X_no_thread_id
+ #       define xthread_equal(id1,id2) pthread_equal(id1, id2)
+ #      endif /* _DECTHREADS_ */
++#      if defined(__MINGW32__)
++#       define xthread_equal(id1,id2) pthread_equal(id1, id2)
++#      endif /* MINGW32 */
+ #      if defined(__linux__)
+ #       define xthread_have_id(id) !pthread_equal(id, 0)
+ #       define xthread_clear_id(id) id = 0
+diff --git a/Xwindows.h b/Xwindows.h
+index 70e1deb..ef10444 100644
+--- a/Xwindows.h
++++ b/Xwindows.h
+@@ -69,11 +69,18 @@ The Open Group.
+ #endif
+ #undef Status
+ #define Status wStatus
++#ifdef Mask
++#define tMask Mask
++#undef Mask
++#endif
+ #define ATOM wATOM
+ #define BYTE wBYTE
+ #define FreeResource wFreeResource
+ #include <windows.h>
+ #undef NOMINMAX
++#ifdef tMask
++#define Mask tMask
++#endif
+ #undef Status
+ #define Status int
+ #undef BYTE
+diff --git a/Xwinsock.h b/Xwinsock.h
+index a81dd7a..884a6a9 100644
+--- a/Xwinsock.h
++++ b/Xwinsock.h
+@@ -49,10 +49,17 @@ The Open Group.
+ #define INT32 wINT32
+ #undef Status
+ #define Status wStatus
++#ifdef Mask
++#define tMask Mask
++#undef Mask
++#endif
+ #define ATOM wATOM
+ #define BYTE wBYTE
+ #define FreeResource wFreeResource
+ #include <winsock2.h>
++#ifdef tMask
++#define Mask tMask
++#endif
+ #undef Status
+ #define Status int
+ #undef BYTE

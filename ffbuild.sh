@@ -58,9 +58,6 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 	VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
 	POTRACE_DIR="potrace-1.11.win32"
 	POTRACE_ARC="$POTRACE_DIR.tar.gz"
-	
-	#Patches
-	PATCH_LIBX11="libx11.patch"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
 	log_note "Building 64-bit version!"
 	MINGVER=mingw64
@@ -71,27 +68,15 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
 	VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
 	POTRACE_DIR="potrace-1.11.win64"
 	POTRACE_ARC="$PORTACE_DIR.tar.gz"
-	
-	#Patches
-	PATCH_XPROTO="64bit-xproto.patch"
-	PATCH_LIBX11="64bit-libx11.patch"
 else 
 	bail "Unknown build system!"
 fi
 
 #Common options
-INSPREFIX="--prefix /$MINGVER"
-AMPREFIX="-I /$MINGVER/share/aclocal"
-HOST="$HOST $INSPREFIX"
+TARGETPREFIX="$BASE/target/$MINGVER"
+AMPREFIX="-I $TARGETPREFIX/share/aclocal"
+HOST="$HOST --prefix $TARGETPREFIX"
 
-
-# Set pkg-config path to also search mingw libs
-export PKG_CONFIG_PATH=/$MINGVER/share/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig
-# Compiler flags
-export LDFLAGS="-L/$MINGVER/lib -L/usr/local/lib -L/lib" 
-export CFLAGS="-DWIN32 -I/$MINGVER/include -I/usr/local/include -I/include -g"
-export CPPFLAGS="${CFLAGS}"
-export LIBS=""
 
 # Make the output directories
 mkdir -p "$WORK"
@@ -99,15 +84,26 @@ mkdir -p "$RELEASE/bin"
 mkdir -p "$RELEASE/lib"
 mkdir -p "$RELEASE/share"
 mkdir -p "$DBSYMBOLS"
+mkdir -p "$TARGETPREFIX/bin"
+mkdir -p "$TARGETPREFIX/lib/pkgconfig"
+mkdir -p "$TARGETPREFIX/include"
+mkdir -p "$TARGETPREFIX/share"
+
+
+# Set pkg-config path to also search mingw libs
+export PATH="$TARGETPREFIX/bin:$PATH"
+export PKG_CONFIG_PATH="$TARGETPREFIX/share/pkgconfig:$TARGETPREFIX/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
+# Compiler flags
+export LDFLAGS="-L$TARGETPREFIX/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib" 
+export CFLAGS="-DWIN32 -I$TARGETPREFIX/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
+export CPPFLAGS="${CFLAGS}"
+export LIBS=""
+
 
 # Install all the available precompiled binaries
 if [ ! -f $BASE/.pacman-installed ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
 
-    # Add the mingw repository and update pacman.
-    # Also updates all packages to the latest.
-    # Not needed anymore with latest version of MSYS2
-    # cp -f $PATCH/pacman.conf /etc/
     pacman -Sy --noconfirm
 
     IOPTS="-S --noconfirm --needed"
@@ -212,7 +208,7 @@ function install_git_source () {
 		
 		if [ ! -z "$4" ]; then
 			log_status "Patching the repository..."
-			git apply "$PATCH/$4"
+			git apply --ignore-whitespace "$PATCH/$4"
 		fi
     else
         cd "$2"
@@ -232,7 +228,7 @@ function install_git_source () {
 				eval "$3" || bail "Failed to generate makefiles"
 			fi
         else
-            ./autogen.sh $INSPREFIX || bail "Failed to autogen"
+            ./autogen.sh --prefix $TARGETPREFIX || bail "Failed to autogen"
         fi
         touch .gen-configure-complete
     fi
@@ -254,16 +250,14 @@ xlib=X.Org/lib
 xcb=X.Org/xcb
 
 install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros" 
-install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "--x11" "$PATCH_XPROTO"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "--x11" "x11proto.patch"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto" "--x11"
-#install_git_source "git://anongit.freedesktop.org/xorg/doc/xorg-sgml-doctools" "xorg-sgml-doctools" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/bigreqsproto" "bigreqsproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
-#install_git_source "git://anongit.freedesktop.org/xcb/pthread-stubs" "xcb-pthread-stubs" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
 install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "libxcb.patch" \
 "
@@ -290,12 +284,13 @@ LIBS=-lws2_32
 --disable-xinput
 --disable-xprint
 --disable-selinux
+--disable-xkb
 --disable-xtest
 --disable-xv
 --disable-xvmc
 "
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "xtrans.patch"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "" 
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "libx11.patch"  "--disable-ipv6"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11"
 
@@ -358,18 +353,11 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     
     if [ ! -f configure ]; then
         log_note "No configure script detected; running ./boostrap..."
-        #./autogen.sh || bail "FontForge autogen"
         ./bootstrap || bail "FontForge autogen"
-        #log_note "Patching lib files to use <fontforge-config.h>..."
-        #sed -bi "s/<config\.h>/<fontforge-config.h>/" lib/*.c
     fi
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
     # windows-cross-compile to disable check for libuuid
-    
-    # Crappy hack to get around forward slash in path issues 
-    #am_cv_python_pythondir=/usr/lib/python2.7/site-packages \
-    #am_cv_python_pyexecdir=/usr/lib/python2.7/site-packages \
 	PYTHON=$PYINST \
     ./configure $HOST \
         --enable-shared \
@@ -413,9 +401,12 @@ for f in $fflibs; do
     filename="$(basename $f)"
 	filenoext="${filename%.*}"
     strip "$f" -so "$RELEASE/bin/$filename"
-	objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
-	objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
 	#cp "$f" "$RELEASE/bin/"
+	if [ -f "$TARGETPREFIX/bin/$filename" ]; then
+		#Only create debug files for the ones we compiled!
+		objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
+		objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
+	fi
 done
 
 log_status "Copying the shared folder of FontForge..."
