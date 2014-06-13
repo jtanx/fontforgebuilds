@@ -32,4 +32,4 @@ if [ ! -z "$npp" ]; then
 	git config --global core.editor "'$npp' -multiInst -notabbar -nosession -noPlugin"
 fi
 
-log_status "Done."
+log_status "Done. You may have to restart the terminal for the changes to work."
