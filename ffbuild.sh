@@ -71,6 +71,7 @@ DBSYMBOLS=$BASE/debugging-symbols/.debug/
 if [ "$MSYSTEM" = "MINGW32" ]; then
 	log_note "Building 32-bit version!"
 
+	ARCH="32-bit"
 	MINGVER=mingw32
 	MINGOTHER=mingw64
 	HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
@@ -82,6 +83,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 elif [ "$MSYSTEM" = "MINGW64" ]; then
 	log_note "Building 64-bit version!"
 
+	ARCH="64-bit"
 	MINGVER=mingw64
 	MINGOTHER=mingw32
 	HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
@@ -530,7 +532,7 @@ log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
 current_date=`date "+%c %z"`
 if [ ! -f $RELEASE/VERSION.txt ]; then
-	printf "FontForge Windows build\r\n\r\ngit " > $RELEASE/VERSION.txt
+	printf "FontForge Windows build ($ARCH)\r\n\r\ngit " > $RELEASE/VERSION.txt
 fi
 
 sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt

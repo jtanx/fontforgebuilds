@@ -1,13 +1,16 @@
 diff --git a/X.h b/X.h
-index 5cf695d..e12a029 100644
+index 5cf695d..a1199a2 100644
 --- a/X.h
 +++ b/X.h
-@@ -63,18 +63,18 @@ SOFTWARE.
+@@ -63,18 +63,31 @@ SOFTWARE.
  #ifndef _XSERVER64
  #  ifndef _XTYPEDEF_XID
  #    define _XTYPEDEF_XID
--typedef unsigned long XID;
++#    ifdef __x86_64__
 +typedef unsigned long long XID;
++#    else
+ typedef unsigned long XID;
++#    endif
  #  endif
  #  ifndef _XTYPEDEF_MASK
  #    define _XTYPEDEF_MASK
@@ -17,12 +20,19 @@ index 5cf695d..e12a029 100644
  #  ifndef _XTYPEDEF_ATOM
  #    define _XTYPEDEF_ATOM
 -typedef unsigned long Atom;		/* Also in Xdefs.h */
++#      ifdef __x86_64__
 +typedef unsigned long long Atom;		/* Also in Xdefs.h */
++#      else
++typedef unsigned long Atom;
++#      endif
  #  endif
--typedef unsigned long VisualID;
--typedef unsigned long Time;
++#  ifdef __x86_64__
 +typedef unsigned long long VisualID;
 +typedef unsigned long long Time;
++#  else
+ typedef unsigned long VisualID;
+ typedef unsigned long Time;
++#  endif
  #else
  #  include <X11/Xmd.h>
  #  ifndef _XTYPEDEF_XID
