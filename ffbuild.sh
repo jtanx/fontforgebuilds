@@ -419,10 +419,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-make -j 4	|| bail "FontForge make"
+#make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-make -j 4 install || bail "FontForge install"
+#make -j 4 install || bail "FontForge install"
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
@@ -528,14 +528,15 @@ log_status "Copying the Python extension dlls..."
 cp -fv "$TARGET/lib/$PYVER/site-packages/fontforge-0.dll" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 cp -fv "$TARGET/lib/$PYVER/site-packages/psMat-0.dll" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
-log_status "Setting the git version number..."
+log_status "Generating the version file..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
 current_date=`date "+%c %z"`
-if [ ! -f $RELEASE/VERSION.txt ]; then
-	printf "FontForge Windows build ($ARCH)\r\n\r\ngit " > $RELEASE/VERSION.txt
-fi
+printf "FontForge Windows build ($ARCH)\r\n$version_hash ($current_date)\r\n\r\n" > $RELEASE/VERSION.txt
+printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
+cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
 
-sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
+# Might as well auto-generate everything
+#sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
 
 log_note "Build complete."
 
