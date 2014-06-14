@@ -16,20 +16,21 @@ BSD 2-clause license.
 --------------------------------------------------------------------------------
 
 Build instructions:
-1. Download and install the base MSYS2 system: 
-   http://sourceforge.net/projects/msys2/
-     - Make sure to get either the i686 (32 bit) or x86_64 (64 bit) version
-       depending on your platform.
-     - Use an archiver tool like 7-zip to extract it to some location,
-       *making sure* that the location *does not* contain spaces.
-	     - For example, extract it to "C:\msys"
-2. Initialise MSYS2 - double click on mingw32_shell.bat. You should be prompted
-   to restart the shell after it initialises a few things.
-3. Open the shell again, and extract the contents of this build system to your
-   home directory.
-     - e.g: Extract ffbuild.zip to C:\msys\home\your_username\ffbuild
-     - You should be able to see this folder from the shell when you type `ls`.
-4. Follow original-archives/binaries/binaries.txt and
-   original-archives/sources/sources.txt to retrieve the required source files.
-5. In the shell, enter the directory (e.g `cd ffbuild`) and run the build script:
-     - ./ffbuild.sh
+See https://sourceforge.net/p/fontforgebuilds/wiki/Using%20the%20build%20script/
+
+--------------------------------------------------------------------------------
+
+CHANGELOG:
+14/06/14
+* Overhauled the build system to allow building 32 and 64 bit builds in one
+  MSYS2 installation.
+  -  Compiled files are now built to the prefix target/mingw[32/64]/ so that 
+     the MSYS2 system so it's reusable / easy to remove/redo compilation of
+	 the files.
+  - If you were using an older build script, it's highly recommended to
+    start with a fresh MSYS2 installation.
+* Patched libxcb (courtesy of the VcXsrv project) so that FontForge now
+  works with the latest version of libX11. Probably fixes a fair few GUI
+  bugs.
+* Added a 'msys2-configs' branch that patches the MSYS2 configuration
+  to make using the terminal and git nicer.

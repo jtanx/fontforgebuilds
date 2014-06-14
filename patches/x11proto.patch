@@ -1,8 +1,13 @@
 diff --git a/X.h b/X.h
-index 5cf695d..567cee1 100644
+index 5cf695d..e12a029 100644
 --- a/X.h
 +++ b/X.h
-@@ -67,7 +67,7 @@ typedef unsigned long XID;
+@@ -63,18 +63,18 @@ SOFTWARE.
+ #ifndef _XSERVER64
+ #  ifndef _XTYPEDEF_XID
+ #    define _XTYPEDEF_XID
+-typedef unsigned long XID;
++typedef unsigned long long XID;
  #  endif
  #  ifndef _XTYPEDEF_MASK
  #    define _XTYPEDEF_MASK
@@ -11,6 +16,16 @@ index 5cf695d..567cee1 100644
  #  endif
  #  ifndef _XTYPEDEF_ATOM
  #    define _XTYPEDEF_ATOM
+-typedef unsigned long Atom;		/* Also in Xdefs.h */
++typedef unsigned long long Atom;		/* Also in Xdefs.h */
+ #  endif
+-typedef unsigned long VisualID;
+-typedef unsigned long Time;
++typedef unsigned long long VisualID;
++typedef unsigned long long Time;
+ #else
+ #  include <X11/Xmd.h>
+ #  ifndef _XTYPEDEF_XID
 diff --git a/Xthreads.h b/Xthreads.h
 index 2027127..355ca5f 100644
 --- a/Xthreads.h
@@ -35,47 +50,93 @@ index 2027127..355ca5f 100644
  #       define xthread_have_id(id) !pthread_equal(id, 0)
  #       define xthread_clear_id(id) id = 0
 diff --git a/Xwindows.h b/Xwindows.h
-index 70e1deb..ef10444 100644
+index 70e1deb..df52a39 100644
 --- a/Xwindows.h
 +++ b/Xwindows.h
-@@ -69,11 +69,18 @@ The Open Group.
- #endif
+@@ -64,16 +64,28 @@ The Open Group.
+ #define BOOL WINBOOL
+ #define INT32 wINT32
+ #ifdef __x86_64__
+-#define INT64 wINT64
+-#define LONG64 wLONG64
+-#endif
++#  define INT64 wINT64
++#  ifdef LONG64
++#    define tLONG64 LONG64
++#    undef LONG64
++#  endif
++#  define LONG64 wLONG64
++#endif /* __x86_64__ */
  #undef Status
  #define Status wStatus
 +#ifdef Mask
-+#define tMask Mask
-+#undef Mask
-+#endif
++#  define tMask Mask
++#  undef Mask
++#endif /* Mask */
  #define ATOM wATOM
  #define BYTE wBYTE
  #define FreeResource wFreeResource
  #include <windows.h>
  #undef NOMINMAX
 +#ifdef tMask
-+#define Mask tMask
-+#endif
++#  define Mask tMask
++#  undef tMask
++#endif /* tMask */
  #undef Status
  #define Status int
  #undef BYTE
+@@ -81,6 +93,10 @@ The Open Group.
+ #undef INT32
+ #undef INT64
+ #undef LONG64
++#ifdef tLONG64
++#  define LONG64 tLONG64
++#  undef tLONG64
++#endif /* tLONG64 */
+ #undef ATOM
+ #undef FreeResource
+ #undef CreateWindowA
 diff --git a/Xwinsock.h b/Xwinsock.h
-index a81dd7a..884a6a9 100644
+index a81dd7a..51c06f5 100644
 --- a/Xwinsock.h
 +++ b/Xwinsock.h
-@@ -49,10 +49,17 @@ The Open Group.
+@@ -47,17 +47,39 @@ The Open Group.
+ #define _NO_BOOL_TYPEDEF
+ #define BOOL WINBOOL
  #define INT32 wINT32
++#ifdef __x86_64__
++#  define INT64 wINT64
++#  ifdef LONG64
++#    define tLONG64 LONG64
++#    undef LONG64
++#  endif
++#  define LONG64 wLONG64
++#endif /* __x86_64__ */
  #undef Status
  #define Status wStatus
 +#ifdef Mask
-+#define tMask Mask
-+#undef Mask
-+#endif
++#  define tMask Mask
++#  undef Mask
++#endif /* Mask */
  #define ATOM wATOM
  #define BYTE wBYTE
  #define FreeResource wFreeResource
  #include <winsock2.h>
 +#ifdef tMask
-+#define Mask tMask
-+#endif
++#  define Mask tMask
++#  undef tMask
++#endif /* tMask */
  #undef Status
  #define Status int
  #undef BYTE
+ #undef BOOL
+ #undef INT32
++#undef INT64
++#undef LONG64
++#ifdef tLONG64
++#  define LONG64 tLONG64
++#  undef tLONG64
++#endif /* tLONG64 */
+ #undef ATOM
+ #undef FreeResource
+ #undef CreateWindowA

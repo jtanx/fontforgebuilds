@@ -70,9 +70,9 @@ DBSYMBOLS=$BASE/debugging-symbols/.debug/
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then
 	log_note "Building 32-bit version!"
-	detect_arch_switch "mingw64" "mingw32"
-	
+
 	MINGVER=mingw32
+	MINGOTHER=mingw64
 	HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
 	PMPREFIX="mingw-w64-i686"
 	PYINST=python2
@@ -81,9 +81,9 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 	POTRACE_DIR="potrace-1.11.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
 	log_note "Building 64-bit version!"
-	detect_arch_switch "mingw32" "mingw64"
-	
+
 	MINGVER=mingw64
+	MINGOTHER=mingw32
 	HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
 	PMPREFIX="mingw-w64-x86_64"
 	PYINST=python3
@@ -94,13 +94,16 @@ else
 	bail "Unknown build system!"
 fi
 
+# Early detection
+detect_arch_switch $MINGOTHER $MINGVER
+
 # Common options
+TARGET=$BASE/target/$MINGVER/
+WORK=$BASE/work/$MINGVER/
 AMPREFIX="-I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
 HOST="$HOST --prefix $TARGET"
 PMTEST="$BASE/.pacman-$MINGVER-installed"
-POTRACE_ARC="$PORTACE_DIR.tar.gz"
-TARGET=$BASE/target/$MINGVER/
-WORK=$BASE/work/$MINGVER/
+POTRACE_ARC="$POTRACE_DIR.tar.gz"
 
 
 # Make the output directories
@@ -227,9 +230,17 @@ function install_git_source () {
     
     log_status "Attempting git install of $2..."
     if [ ! -d "$2" ]; then
-        log_status "Cloning git repository from $1..."
-        git clone "$1" "$2" || bail "Git clone of $1"
-        cd "$2"
+		if [ -d "$BASE/work/$MINGOTHER/$2" ]; then
+			log_status "Found copy from other arch build, performing local clone..."
+			cp -r "$BASE/work/$MINGOTHER/$2" . || bail "Local clone failed"
+			cd "$2"
+			git clean -dxf || bail "Could not clean repository"
+			git reset --hard || bail "Could not reset repository"
+		else
+			log_status "Cloning git repository from $1..."
+			git clone "$1" "$2" || bail "Git clone of $1"
+			cd "$2"
+		fi
 		
 		if [ ! -z "$4" ]; then
 			log_status "Patching the repository..."
@@ -317,7 +328,7 @@ LIBS=-lws2_32
 "
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "libx11.patch"  "--disable-ipv6"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11" "libXft.patch"
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
@@ -365,12 +376,20 @@ cd $WORK
 
 # fontforge
 if [ ! -d fontforge ]; then
-    log_status "Cloning the fontforge repository"
-    git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
-    cd fontforge 
-    git checkout win32 || bail "Checking out win32 branch"
+		if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
+			log_status "Found copy from other arch build, performing local clone..."
+			# Don't use git clone - need the remotes for updating
+			cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
+			cd "fontforge"
+			git clean -dxf || bail "Could not clean repository"
+			git reset --hard || bail "Could not reset repository"
+		else
+			log_status "Cloning the fontforge repository..."
+			git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
+			cd "fontforge"
+		fi
 else
-    cd fontforge
+	cd "fontforge"
 fi
 
 if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]; then
@@ -398,10 +417,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-make -j 4	|| bail "FontForge make"
+#make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-make -j 4 install || bail "FontForge install"
+#make -j 4 install || bail "FontForge install"
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
@@ -482,11 +501,17 @@ log_status "Copying sfd icon..."
 cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
 
 log_status "Copying the Python libraries..."
+cd $BASE
 if [ -d "$RELEASE/lib/$PYVER" ]; then
     log_note "Skipping python library copy because folder already exists, and copying is slow."
-else  
-    cp -r "$BINARY/$PYVER" "$RELEASE/lib"
+else
+	if [ ! -d "$BINARY/$PYVER" ]; then
+		log_note "Python folder not found - running 'strip-python'..."
+		$BASE/strip-python.sh
+	fi
+    cp -r "$BINARY/$PYVER" "$RELEASE/lib" || bail "Python folder could not be copied"
 fi
+cd $WORK
 
 log_status "Stripping Python cache files (*.pyc,*.pyo,__pycache__)..."
 find "$RELEASE/lib/$PYVER" -regextype sed -regex ".*\.py[co]" | xargs rm -rfv
@@ -496,6 +521,10 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 	log_status "Copying OpenSSL libraries (for Python hashlib)..."
 	strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
 fi
+
+log_status "Copying the Python extension dlls..."
+cp -fv "$TARGET/lib/$PYVER/site-packages/fontforge-0.dll" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+cp -fv "$TARGET/lib/$PYVER/site-packages/psMat-0.dll" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Setting the git version number..."
 version_hash=`git -C $WORK/fontforge rev-parse master`

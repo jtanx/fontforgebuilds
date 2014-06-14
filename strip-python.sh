@@ -9,10 +9,10 @@ else
 fi
 PYDIR=/$MSYSTEM/lib/$PYVER
 
-cd original-archives/binaries
+cd original-archives/binaries || exit 1
 
 if [ ! -d $PYVER ]; then
-	cp -r $PYDIR .
+	cp -r $PYDIR . || exit 1
 fi
 
 cd $PYVER

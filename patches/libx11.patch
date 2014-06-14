@@ -24,6 +24,121 @@ index 4431559..d5f114d 100644
  #define _XCreateMutex_fn (*_XCreateMutex_fn_p)
  #define _XFreeMutex_fn (*_XFreeMutex_fn_p)
  #define _XLockMutex_fn (*_XLockMutex_fn_p)
+diff --git a/modules/im/ximcp/imDefIc.c b/modules/im/ximcp/imDefIc.c
+index 143bd59..005b998 100644
+--- a/modules/im/ximcp/imDefIc.c
++++ b/modules/im/ximcp/imDefIc.c
+@@ -1340,7 +1340,7 @@ _XimGetInputStyle(
+ 
+     for (p = arg; p && p->name; p++) {
+ 	if (!(strcmp(p->name, XNInputStyle))) {
+-	    *input_style = (XIMStyle)p->value;
++	    *input_style = (XIMStyle)(intptr_t)p->value;
+ 	    return True;
+ 	}
+     }
+diff --git a/modules/im/ximcp/imRm.c b/modules/im/ximcp/imRm.c
+index cb9e1b2..0574357 100644
+--- a/modules/im/ximcp/imRm.c
++++ b/modules/im/ximcp/imRm.c
+@@ -836,7 +836,7 @@ _XimEncodeStyle(
+     XIMStyle		*out;
+ 
+     out = (XIMStyle *)((char *)top + info->offset);
+-    *out = (XIMStyle)val;
++    *out = (XIMStyle)(intptr_t)val;
+     return True;
+ }
+ 
+@@ -874,7 +874,7 @@ _XimEncodeResetState(
+     XIMResetState	*out;
+ 
+     out = (XIMResetState *)((char *)top + info->offset);
+-    *out = (XIMResetState)val;
++    *out = (XIMResetState)(intptr_t)val;
+     return True;
+ }
+ 
+@@ -930,7 +930,7 @@ _XimEncodeHotKetState(
+     XIMHotKeyState	*out;
+ 
+     out = (XIMHotKeyState *)((char *)top + info->offset);
+-    *out = (XIMHotKeyState)val;
++    *out = (XIMHotKeyState)(intptr_t)val;
+     return True;
+ }
+ 
+@@ -995,7 +995,7 @@ _XimEncodeLong(
+     unsigned long	*out;
+ 
+     out = (unsigned long *)((char *)top + info->offset);
+-    *out = (unsigned long)val;
++    *out = (unsigned long)(intptr_t)val;
+     return True;
+ }
+ 
+@@ -1034,7 +1034,7 @@ _XimEncodeLineSpace(
+     int			*out;
+ 
+     out = (int *)((char *)top + info->offset);
+-    *out = (long)val;
++    *out = (long)(intptr_t)val;
+     return True;
+ }
+ 
+@@ -1060,7 +1060,7 @@ _XimEncodePreeditState(
+     XIMPreeditState	*out;
+ 
+     out = (XIMPreeditState *)((char *)top + info->offset);
+-    *out = (XIMPreeditState)val;
++    *out = (XIMPreeditState)(intptr_t)val;
+     return True;
+ }
+ 
+diff --git a/modules/im/ximcp/imRmAttr.c b/modules/im/ximcp/imRmAttr.c
+index 9d4e462..69523cc 100644
+--- a/modules/im/ximcp/imRmAttr.c
++++ b/modules/im/ximcp/imRmAttr.c
+@@ -589,7 +589,7 @@ _XimValueToAttribute(
+ 	    return False;
+ 	}
+ 
+-	*((CARD8 *)buf) = (CARD8)(long)value;
++	*((CARD8 *)buf) = (CARD8)(intptr_t)value;
+ 	*len = ret_len;
+ 	break;
+ 
+@@ -600,7 +600,7 @@ _XimValueToAttribute(
+ 	    return False;
+ 	}
+ 
+-	*((CARD16 *)buf) = (CARD16)(long)value;
++	*((CARD16 *)buf) = (CARD16)(intptr_t)value;
+ 	*len = ret_len;
+ 	break;
+ 
+@@ -613,7 +613,7 @@ _XimValueToAttribute(
+ 	    return False;
+ 	}
+ 
+-	*((CARD32 *)buf) = (CARD32)(long)value;
++	*((CARD32 *)buf) = (CARD32)(intptr_t)value;
+ 	*len = ret_len;
+ 	break;
+ 
+diff --git a/src/ParseCmd.c b/src/ParseCmd.c
+index 6771908..182d857 100644
+--- a/src/ParseCmd.c
++++ b/src/ParseCmd.c
+@@ -199,7 +199,7 @@ XrmParseCommand(
+ 
+ 		case XrmoptionSkipNArgs:
+ 		    {
+-			register int j = 1 + (long) options[i].value;
++			register int j = (int)(1 + (intptr_t) options[i].value);
+ 
+ 			if (j > myargc) j = myargc;
+ 			for (; j > 0; j--) {
 diff --git a/src/XlibInt.c b/src/XlibInt.c
 index 80c1298..635e3ba 100644
 --- a/src/XlibInt.c
@@ -141,3 +256,61 @@ index 9f4fe06..448b699 100644
  static DWORD _X_TlsIndex = (DWORD)-1;
  
  void _Xthread_init(void)
+diff --git a/src/xlibi18n/IMWrap.c b/src/xlibi18n/IMWrap.c
+index a7c1d98..ec94a7c 100644
+--- a/src/xlibi18n/IMWrap.c
++++ b/src/xlibi18n/IMWrap.c
+@@ -89,12 +89,12 @@ _XCopyToArg(XPointer src, XPointer *dst, unsigned int size)
+ 	} u;
+ 	if (size <= sizeof(XPointer)) {
+ 	    memcpy((char *)&u, (char *)src, (int)size);
+-	    if (size == sizeof(long))	       *dst = (XPointer)u.longval;
++	    if (size == sizeof(long))	       *dst = (XPointer)(intptr_t)u.longval;
+ #ifdef LONG64
+-	    else if (size == sizeof(int))      *dst = (XPointer)(long)u.intval;
++	    else if (size == sizeof(int))      *dst = (XPointer)(intptr_t)u.intval;
+ #endif
+-	    else if (size == sizeof(short))    *dst = (XPointer)(long)u.shortval;
+-	    else if (size == sizeof(char))     *dst = (XPointer)(long)u.charval;
++	    else if (size == sizeof(short))    *dst = (XPointer)(intptr_t)u.shortval;
++	    else if (size == sizeof(char))     *dst = (XPointer)(intptr_t)u.charval;
+ 	    else if (size == sizeof(char*))    *dst = (XPointer)u.charptr;
+ 	    else if (size == sizeof(XPointer)) *dst = (XPointer)u.ptr;
+ 	    else memcpy( (char*)dst, (char*)src, (int)size );
+diff --git a/src/xlibi18n/XDefaultIMIF.c b/src/xlibi18n/XDefaultIMIF.c
+index db0f5d1..cb21c52 100644
+--- a/src/xlibi18n/XDefaultIMIF.c
++++ b/src/xlibi18n/XDefaultIMIF.c
+@@ -295,7 +295,7 @@ _SetICValueData(XIC ic, XIMArg *values, XICOp_t mode)
+     for (p = values; p != NULL && p->name != NULL; p++) {
+ 	if(strcmp(p->name, XNInputStyle) == 0) {
+ 	    if (mode == CREATE_IC)
+-		ic->core.input_style = (XIMStyle)p->value;
++		ic->core.input_style = (XIMStyle)(intptr_t)p->value;
+ 	} else if (strcmp(p->name, XNClientWindow) == 0) {
+ 	    ic->core.client_window = (Window)p->value ;
+ 	} else if (strcmp(p->name, XNFocusWindow) == 0) {
+diff --git a/src/xlibi18n/lcWrap.c b/src/xlibi18n/lcWrap.c
+index 034bd3c..3f65f0d 100644
+--- a/src/xlibi18n/lcWrap.c
++++ b/src/xlibi18n/lcWrap.c
+@@ -503,15 +503,15 @@ _XlcCopyFromArg(
+     int size)
+ {
+     if (size == sizeof(long))
+-	*((long *) dst) = (long) src;
++	*((long *) dst) = (intptr_t) src;
+ #ifdef LONG64
+     else if (size == sizeof(int))
+-	*((int *) dst) = (int)(long) src;
++	*((int *) dst) = (int)(intptr_t) src;
+ #endif
+     else if (size == sizeof(short))
+-	*((short *) dst) = (short)(long) src;
++	*((short *) dst) = (short)(intptr_t) src;
+     else if (size == sizeof(char))
+-	*((char *) dst) = (char)(long) src;
++	*((char *) dst) = (char)(intptr_t) src;
+     else if (size == sizeof(XPointer))
+ 	*((XPointer *) dst) = (XPointer) src;
+     else if (size > sizeof(XPointer))
