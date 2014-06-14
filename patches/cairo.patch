@@ -1,0 +1,82 @@
+diff -ruBw ../cairo-1.12.16/perf/Makefile.am cairo-1.12.16/perf/Makefile.am
+--- ../cairo-1.12.16/perf/Makefile.am	2013-08-26 23:07:21.000000000 +0800
++++ cairo-1.12.16/perf/Makefile.am	2014-06-14 22:58:55.201400000 +0800
+@@ -15,11 +15,11 @@
+ 
+ SUBDIRS = micro
+ 
+-noinst_PROGRAMS = \
+-	cairo-analyse-trace \
+-	cairo-perf-trace \
+-	cairo-perf-micro \
+-	$(NULL)
++#noinst_PROGRAMS = \
++#	cairo-analyse-trace \
++#	cairo-perf-trace \
++#	cairo-perf-micro \
++#	$(NULL)
+ 
+ EXTRA_PROGRAMS += \
+ 	cairo-analyse-trace \
+diff -ruBw ../cairo-1.12.16/src/cairo-mutex-impl-private.h cairo-1.12.16/src/cairo-mutex-impl-private.h
+--- ../cairo-1.12.16/src/cairo-mutex-impl-private.h	2013-08-26 23:07:21.000000000 +0800
++++ cairo-1.12.16/src/cairo-mutex-impl-private.h	2014-06-14 22:59:47.893400000 +0800
+@@ -175,7 +175,7 @@
+ # define CAIRO_RECURSIVE_MUTEX_IMPL_INIT(mutex)
+ # define CAIRO_RECURSIVE_MUTEX_IMPL_NIL_INITIALIZER 0
+ 
+-#elif defined(_WIN32) /******************************************************/
++#elif defined(_WIN32) && !defined(__MINGW32__) /******************************************************/
+ 
+ #define WIN32_LEAN_AND_MEAN
+ /* We require Windows 2000 features such as ETO_PDY */
+diff -ruBw ../cairo-1.12.16/src/cairo-ps-surface.c cairo-1.12.16/src/cairo-ps-surface.c
+--- ../cairo-1.12.16/src/cairo-ps-surface.c	2013-08-26 23:07:21.000000000 +0800
++++ cairo-1.12.16/src/cairo-ps-surface.c	2014-06-14 23:00:17.742400000 +0800
+@@ -93,7 +93,7 @@
+ #define DEBUG_FALLBACK(s)
+ #endif
+ 
+-#ifndef HAVE_CTIME_R
++#if !defined(HAVE_CTIME_R) && !defined(__MINGW32__)
+ #define ctime_r(T, BUF) ctime (T)
+ #endif
+ 
+diff -ruBw ../cairo-1.12.16/src/cairo-xcb-surface-render.c cairo-1.12.16/src/cairo-xcb-surface-render.c
+--- ../cairo-1.12.16/src/cairo-xcb-surface-render.c	2013-08-26 23:07:21.000000000 +0800
++++ cairo-1.12.16/src/cairo-xcb-surface-render.c	2014-06-14 23:01:18.861400000 +0800
+@@ -197,7 +197,10 @@
+     BLEND(COLOR_BURN, COLOR_BURN);
+     BLEND(HARD_LIGHT, HARD_LIGHT);
+     BLEND(SOFT_LIGHT, SOFT_LIGHT);
++    #pragma push_macro("DIFFERENCE")
++    #undef DIFFERENCE
+     BLEND(DIFFERENCE, DIFFERENCE);
++    #pragma pop_macro("DIFFERENCE")
+     BLEND(EXCLUSION, EXCLUSION);
+     BLEND(HSL_HUE, HSL_HUE);
+     BLEND(HSL_SATURATION, HSL_SATURATION);
+diff -ruBw ../cairo-1.12.16/src/win32/cairo-win32-private.h cairo-1.12.16/src/win32/cairo-win32-private.h
+--- ../cairo-1.12.16/src/win32/cairo-win32-private.h	2013-08-26 23:07:21.000000000 +0800
++++ cairo-1.12.16/src/win32/cairo-win32-private.h	2014-06-14 23:01:57.314800000 +0800
+@@ -144,7 +144,7 @@
+ } cairo_win32_printing_surface_t;
+ #define to_win32_printing_surface(S) ((cairo_win32_printing_surface_t *)(S))
+ 
+-typedef BOOL (WINAPI *cairo_win32_alpha_blend_func_t) (HDC hdcDest,
++typedef WINBOOL (WINAPI *cairo_win32_alpha_blend_func_t) (HDC hdcDest,
+ 						       int nXOriginDest,
+ 						       int nYOriginDest,
+ 						       int nWidthDest,
+diff -ruBw ../cairo-1.12.16/test/Makefile.am cairo-1.12.16/test/Makefile.am
+--- ../cairo-1.12.16/test/Makefile.am	2013-08-26 23:07:21.000000000 +0800
++++ cairo-1.12.16/test/Makefile.am	2014-06-14 22:58:37.112400000 +0800
+@@ -71,7 +71,7 @@
+ endif
+ test_sources += $(test)
+ 
+-noinst_PROGRAMS = cairo-test-suite$(EXEEXT) # always build
++#noinst_PROGRAMS = cairo-test-suite$(EXEEXT) # always build
+ noinst_SCRIPTS = check-refs.sh
+ 
+ TESTS += cairo-test-suite$(EXEEXT)

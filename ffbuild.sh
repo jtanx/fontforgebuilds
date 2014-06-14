@@ -155,7 +155,7 @@ if [ ! -f $PMTEST ]; then
     # Libraries
     pacman $IOPTS $PMPREFIX-zlib $PMPREFIX-libpng $PMPREFIX-giflib $PMPREFIX-libtiff
     pacman $IOPTS $PMPREFIX-libjpeg-turbo $PMPREFIX-libxml2 $PMPREFIX-freetype
-    pacman $IOPTS $PMPREFIX-fontconfig $PMPREFIX-glib2
+    pacman $IOPTS $PMPREFIX-fontconfig $PMPREFIX-glib2 $PMPREFIX-pixman
     pacman $IOPTS $PMPREFIX-harfbuzz $PMPREFIX-gc #BDW Garbage collector
 
     touch $PMTEST
@@ -296,6 +296,7 @@ install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputp
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
+
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "libxtrans.patch"
 install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "libxcb.patch" \
@@ -310,7 +311,6 @@ LIBS=-lws2_32
 --disable-present
 --disable-randr
 --disable-record
---disable-render
 --disable-resource
 --disable-screensaver
 --disable-shape
@@ -329,12 +329,16 @@ LIBS=-lws2_32
 --disable-xvmc
 "
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "libx11.patch"  "--disable-ipv6"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11" "libXft.patch"
 
+log_status "Installing Cairo..."
+install_source_patch cairo-1.12.16.tar.xz "" "cairo.patch" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-pdf --disable-svg "
+
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
-install_source pango-1.36.3.tar.xz "" "--with-xft --without-cairo"
+install_source pango-1.36.3.tar.xz "" "--with-xft --with-cairo"
 #install_git_source "https://git.gnome.org/browse/pango" "pango" "--x11" "" "--with-xft"
 
 # ZMQ does not work for now
@@ -410,7 +414,6 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
         --disable-static \
         --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
-        --without-cairo \
         --without-libzmq \
         --with-freetype-source="$WORK/freetype-2.5.3" \
         --without-libreadline \

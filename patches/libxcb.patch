@@ -47,8 +47,38 @@ index 68c3b2f..bd8b086 100644
  
  case $host_os in
          # darwin through Snow Leopard has poll() but can't be used to poll character devices.
+diff --git a/src/xcb.h b/src/xcb.h
+index c17a2ef..2246678 100644
+--- a/src/xcb.h
++++ b/src/xcb.h
+@@ -27,6 +27,13 @@
+ 
+ #ifndef __XCB_H__
+ #define __XCB_H__
++
++#ifndef _WIN32
++#include <sys/uio.h>
++#else
++#include "xcb_windefs.h"
++#endif
++
+ #include <sys/types.h>
+ 
+ #if defined(__solaris__)
+@@ -35,11 +42,6 @@
+ #include <stdint.h>
+ #endif
+ 
+-#ifndef _WIN32
+-#include <sys/uio.h>
+-#else
+-#include "xcb_windefs.h"
+-#endif
+ #include <pthread.h>
+ 
+ 
 diff --git a/src/xcb_auth.c b/src/xcb_auth.c
-index 29e2b6f..4f0cef8 100644
+index 29e2b6f..6db629b 100644
 --- a/src/xcb_auth.c
 +++ b/src/xcb_auth.c
 @@ -72,7 +72,7 @@ enum auth_protos {
@@ -65,7 +95,7 @@ index 29e2b6f..4f0cef8 100644
  #define INITIAL_SOCKNAME_SLACK 108
  
 +#ifndef WIN32
-+typedef int (*LPFN_GETPEERNAME)(int,struct sockaddr *,socklen_t *);
++typedef int (*xcb_sock_ret_t)(int,struct sockaddr *,socklen_t *);
 +#endif
  /* Return a dynamically allocated socket address structure according
     to the value returned by either getpeername() or getsockname()
@@ -74,7 +104,7 @@ index 29e2b6f..4f0cef8 100644
 -static struct sockaddr *get_peer_sock_name(int (*socket_func)(int,
 -                                                              struct sockaddr *,
 -                                                              socklen_t *),
-+static struct sockaddr *get_peer_sock_name(LPFN_GETPEERNAME socket_func,
++static struct sockaddr *get_peer_sock_name(xcb_sock_ret_t socket_func,
                                             int fd)
  {
      socklen_t socknamelen = sizeof(struct sockaddr) + INITIAL_SOCKNAME_SLACK;
@@ -264,17 +294,14 @@ index ba0f108..1918e85 100644
      if(getaddrinfo(host, service, &hints, &results))
          /* FIXME: use gai_strerror, and fill in error connection */
 diff --git a/src/xcb_windefs.h b/src/xcb_windefs.h
-index df6026d..448205f 100644
+index df6026d..558c1c6 100644
 --- a/src/xcb_windefs.h
 +++ b/src/xcb_windefs.h
-@@ -31,14 +31,17 @@
+@@ -31,15 +31,16 @@
  #define WINVER 0x0501 /* required for getaddrinfo/freeaddrinfo defined only for WinXP and above */
  #endif
  
-+#define INCL_WINSOCK_API_TYPEDEFS 1 /* Needed for LPFN_GETPEERNAME */
-+
 +#define FD_SETSIZE 1024
-+
 +#include <X11/Xwinsock.h>
 +#include <X11/XTrans/Xtrans.h>
  #include <winsock2.h>
@@ -288,7 +315,9 @@ index df6026d..448205f 100644
 +typedef unsigned char BYTE;
  
  typedef unsigned int in_addr_t;
++typedef int (WINAPI *xcb_sock_ret_t)(SOCKET, struct sockaddr *, int *);
  
+ #endif /* xcb_windefs.h */
 diff --git a/src/xcb_xid.c b/src/xcb_xid.c
 index 79a9a27..7d9fc62 100644
 --- a/src/xcb_xid.c

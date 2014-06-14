@@ -60,10 +60,10 @@ index 2027127..355ca5f 100644
  #       define xthread_have_id(id) !pthread_equal(id, 0)
  #       define xthread_clear_id(id) id = 0
 diff --git a/Xwindows.h b/Xwindows.h
-index 70e1deb..df52a39 100644
+index 70e1deb..5f8eb93 100644
 --- a/Xwindows.h
 +++ b/Xwindows.h
-@@ -64,16 +64,28 @@ The Open Group.
+@@ -64,16 +64,21 @@ The Open Group.
  #define BOOL WINBOOL
  #define INT32 wINT32
  #ifdef __x86_64__
@@ -71,71 +71,54 @@ index 70e1deb..df52a39 100644
 -#define LONG64 wLONG64
 -#endif
 +#  define INT64 wINT64
-+#  ifdef LONG64
-+#    define tLONG64 LONG64
-+#    undef LONG64
-+#  endif
++#  pragma push_macro("LONG64")
++#  undef LONG64
 +#  define LONG64 wLONG64
 +#endif /* __x86_64__ */
  #undef Status
  #define Status wStatus
-+#ifdef Mask
-+#  define tMask Mask
-+#  undef Mask
-+#endif /* Mask */
++#pragma push_macro("Mask")
++#undef Mask
  #define ATOM wATOM
  #define BYTE wBYTE
  #define FreeResource wFreeResource
  #include <windows.h>
  #undef NOMINMAX
-+#ifdef tMask
-+#  define Mask tMask
-+#  undef tMask
-+#endif /* tMask */
++#pragma pop_macro("Mask")
  #undef Status
  #define Status int
  #undef BYTE
-@@ -81,6 +93,10 @@ The Open Group.
+@@ -81,6 +86,7 @@ The Open Group.
  #undef INT32
  #undef INT64
  #undef LONG64
-+#ifdef tLONG64
-+#  define LONG64 tLONG64
-+#  undef tLONG64
-+#endif /* tLONG64 */
++#pragma pop_macro("LONG64")
  #undef ATOM
  #undef FreeResource
  #undef CreateWindowA
 diff --git a/Xwinsock.h b/Xwinsock.h
-index a81dd7a..51c06f5 100644
+index a81dd7a..d710f8b 100644
 --- a/Xwinsock.h
 +++ b/Xwinsock.h
-@@ -47,17 +47,39 @@ The Open Group.
+@@ -47,17 +47,29 @@ The Open Group.
  #define _NO_BOOL_TYPEDEF
  #define BOOL WINBOOL
  #define INT32 wINT32
 +#ifdef __x86_64__
 +#  define INT64 wINT64
-+#  ifdef LONG64
-+#    define tLONG64 LONG64
-+#    undef LONG64
-+#  endif
++#  pragma push_macro("LONG64")
++#  undef LONG64
 +#  define LONG64 wLONG64
 +#endif /* __x86_64__ */
  #undef Status
  #define Status wStatus
-+#ifdef Mask
-+#  define tMask Mask
-+#  undef Mask
-+#endif /* Mask */
++#pragma push_macro("Mask")
++#undef Mask
  #define ATOM wATOM
  #define BYTE wBYTE
  #define FreeResource wFreeResource
  #include <winsock2.h>
-+#ifdef tMask
-+#  define Mask tMask
-+#  undef tMask
-+#endif /* tMask */
++#pragma pop_macro("Mask")
  #undef Status
  #define Status int
  #undef BYTE
@@ -143,10 +126,7 @@ index a81dd7a..51c06f5 100644
  #undef INT32
 +#undef INT64
 +#undef LONG64
-+#ifdef tLONG64
-+#  define LONG64 tLONG64
-+#  undef tLONG64
-+#endif /* tLONG64 */
++#pragma pop_macro("LONG64")
  #undef ATOM
  #undef FreeResource
  #undef CreateWindowA

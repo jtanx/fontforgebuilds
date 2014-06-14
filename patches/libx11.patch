@@ -243,6 +243,19 @@ index 80c1298..635e3ba 100644
  #undef _Xdebug
  int _Xdebug = 0;
  int *_Xdebug_p = &_Xdebug;
+diff --git a/src/Xxcbint.h b/src/Xxcbint.h
+index bf41c23..2143543 100644
+--- a/src/Xxcbint.h
++++ b/src/Xxcbint.h
+@@ -8,7 +8,7 @@
+ #include <stdint.h>
+ #include <X11/Xlibint.h>
+ #ifdef WIN32
+-#include <X11/Xwindows.h>
++#include <X11/XWinsock.h>
+ #endif
+ #include <X11/Xlib-xcb.h>
+ #include "locking.h"
 diff --git a/src/locking.c b/src/locking.c
 index 9f4fe06..448b699 100644
 --- a/src/locking.c
