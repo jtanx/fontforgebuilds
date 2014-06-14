@@ -11,6 +11,9 @@ ReleasePackage/VERSION.txt
 fontforge-setup/*.exe
 ui-fonts/*
 
-.pacman-installed
+.building-mingw32
+.building-mingw64
+.pacman-mingw32-installed
+.pacman-mingw64-installed
 log*.txt
 run_fontforge.exe

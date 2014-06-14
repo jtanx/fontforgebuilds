@@ -2,6 +2,12 @@ Place the following files in this folder:
 freetype-2.5.3.tar.bz2: https://sourceforge.net/projects/freetype/files/freetype2/
 pango-1.36.3.tar.xz: http://ftp.gnome.org/pub/gnome/sources/pango/
 
+===============================================================================
+
+NOTE: The following files are no longer needed, as all X.Org files are now 
+fetched directly from git.
+
+===============================================================================
 Place the following files in X.Org/proto:
 Get from:
 http://ftp.x.org/pub/individual/proto/

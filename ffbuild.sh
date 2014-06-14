@@ -12,6 +12,7 @@
 
 # Retrieve input arguments to script
 reconfigure="$1"
+noconfirm="$2"
 
 # Colourful text
 # Red text
@@ -34,14 +35,33 @@ function bail () {
     exit 1
 }
 
+function detect_arch_switch () {
+	local from=".building-$1"
+	local to=".building-$2"
+	
+	if [ -f "$from" ]; then
+		if [ "$noconfirm" = "--yes" ]; then
+			git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
+		else
+			read -p "Architecture change detected! ReleasePackage must be reset. Continue? [y/N]: " arch_confirm
+			case $arch_confirm in
+				[Yy]* ) git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"; break;;
+				* ) bail "Not overwriting ReleasePackage" ;;
+			esac
+		fi
+	fi
+	
+	rm -f $from
+	touch $to
+}
+
 # Preamble
 log_note "MSYS2 FontForge build script..."
 
 # Set working folders
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PATCH=$BASE/patches
-WORK=$BASE/work
-UIFONTS=$BASE/ui-fonts
+PATCH=$BASE/patches/
+UIFONTS=$BASE/ui-fonts/
 SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
@@ -50,6 +70,8 @@ DBSYMBOLS=$BASE/debugging-symbols/.debug/
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then
 	log_note "Building 32-bit version!"
+	detect_arch_switch "mingw64" "mingw32"
+	
 	MINGVER=mingw32
 	HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
 	PMPREFIX="mingw-w64-i686"
@@ -57,9 +79,10 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
 	PYVER=python2.7
 	VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
 	POTRACE_DIR="potrace-1.11.win32"
-	POTRACE_ARC="$POTRACE_DIR.tar.gz"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
 	log_note "Building 64-bit version!"
+	detect_arch_switch "mingw32" "mingw64"
+	
 	MINGVER=mingw64
 	HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
 	PMPREFIX="mingw-w64-x86_64"
@@ -67,15 +90,17 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
 	PYVER=python3.4
 	VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
 	POTRACE_DIR="potrace-1.11.win64"
-	POTRACE_ARC="$PORTACE_DIR.tar.gz"
 else 
 	bail "Unknown build system!"
 fi
 
-#Common options
-TARGETPREFIX="$BASE/target/$MINGVER"
-AMPREFIX="-I $TARGETPREFIX/share/aclocal"
-HOST="$HOST --prefix $TARGETPREFIX"
+# Common options
+AMPREFIX="-I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
+HOST="$HOST --prefix $TARGET"
+PMTEST="$BASE/.pacman-$MINGVER-installed"
+POTRACE_ARC="$PORTACE_DIR.tar.gz"
+TARGET=$BASE/target/$MINGVER/
+WORK=$BASE/work/$MINGVER/
 
 
 # Make the output directories
@@ -84,24 +109,24 @@ mkdir -p "$RELEASE/bin"
 mkdir -p "$RELEASE/lib"
 mkdir -p "$RELEASE/share"
 mkdir -p "$DBSYMBOLS"
-mkdir -p "$TARGETPREFIX/bin"
-mkdir -p "$TARGETPREFIX/lib/pkgconfig"
-mkdir -p "$TARGETPREFIX/include"
-mkdir -p "$TARGETPREFIX/share"
+mkdir -p "$TARGET/bin"
+mkdir -p "$TARGET/lib/pkgconfig"
+mkdir -p "$TARGET/include"
+mkdir -p "$TARGET/share"
 
 
 # Set pkg-config path to also search mingw libs
-export PATH="$TARGETPREFIX/bin:$PATH"
-export PKG_CONFIG_PATH="$TARGETPREFIX/share/pkgconfig:$TARGETPREFIX/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
+export PATH="$TARGET/bin:$PATH"
+export PKG_CONFIG_PATH="$TARGET/share/pkgconfig:$TARGET/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
 # Compiler flags
-export LDFLAGS="-L$TARGETPREFIX/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib" 
-export CFLAGS="-DWIN32 -I$TARGETPREFIX/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
+export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib" 
+export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
 
 
 # Install all the available precompiled binaries
-if [ ! -f $BASE/.pacman-installed ]; then
+if [ ! -f $PMTEST ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
 
     pacman -Sy --noconfirm
@@ -128,11 +153,11 @@ if [ ! -f $BASE/.pacman-installed ]; then
     pacman $IOPTS $PMPREFIX-fontconfig $PMPREFIX-glib2
     pacman $IOPTS $PMPREFIX-harfbuzz $PMPREFIX-gc #BDW Garbage collector
 
-    touch $BASE/.pacman-installed
+    touch $PMTEST
     log_note "Finished installing precompiled libraries!"
 else
     log_note "Detected that precompiled libraries are already installed."
-    log_note "  Delete '$BASE/.pacman-installed' and run this script again if"
+    log_note "  Delete '$PMTEST' and run this script again if"
     log_note "  this is not the case."
 fi # pacman installed
 
@@ -208,7 +233,7 @@ function install_git_source () {
 		
 		if [ ! -z "$4" ]; then
 			log_status "Patching the repository..."
-			git apply --ignore-whitespace "$PATCH/$4"
+			git apply --ignore-whitespace "$PATCH/$4" || bail "Git patch failed"
 		fi
     else
         cd "$2"
@@ -223,12 +248,12 @@ function install_git_source () {
         if [ ! -z "$3" ]; then
 			#X11 ignores the --prefix option, so...
 			if [ "$3" = "--x11" ]; then
-				autoreconf -fiv $AMPREFIX
+				autoreconf -fiv $AMPREFIX || bail "Autoreconf failed"
 			else
 				eval "$3" || bail "Failed to generate makefiles"
 			fi
         else
-            ./autogen.sh --prefix $TARGETPREFIX || bail "Failed to autogen"
+            ./autogen.sh --prefix $TARGET || bail "Failed to autogen"
         fi
         touch .gen-configure-complete
     fi
@@ -259,6 +284,7 @@ install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextpro
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "libxtrans.patch"
 install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "libxcb.patch" \
 "
 LIBS=-lws2_32
@@ -289,7 +315,6 @@ LIBS=-lws2_32
 --disable-xv
 --disable-xvmc
 "
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "xtrans.patch"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "libx11.patch"  "--disable-ipv6"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11"
@@ -402,7 +427,7 @@ for f in $fflibs; do
 	filenoext="${filename%.*}"
     strip "$f" -so "$RELEASE/bin/$filename"
 	#cp "$f" "$RELEASE/bin/"
-	if [ -f "$TARGETPREFIX/bin/$filename" ]; then
+	if [ -f "$TARGET/bin/$filename" ]; then
 		#Only create debug files for the ones we compiled!
 		objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
 		objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
@@ -446,7 +471,7 @@ strip $WORK/run_fontforge/run_fontforge.exe -so "$RELEASE/run_fontforge.exe" \
     || bail "run_fontforge"
 
 log_status "Copying the Pango modules..."
-cp -rf /$MINGVER/lib/pango "$RELEASE/lib"
+cp -rf $TARGET/lib/pango "$RELEASE/lib"
 
 log_status "Copying UI fonts..."
 mkdir -p "$RELEASE/share/fonts"
