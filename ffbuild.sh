@@ -102,7 +102,6 @@ detect_arch_switch $MINGOTHER $MINGVER
 # Common options
 TARGET=$BASE/target/$MINGVER/
 WORK=$BASE/work/$MINGVER/
-AMPREFIX="-I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
 HOST="$HOST --prefix $TARGET"
 PMTEST="$BASE/.pacman-$MINGVER-installed"
 POTRACE_ARC="$POTRACE_DIR.tar.gz"
@@ -123,6 +122,8 @@ mkdir -p "$TARGET/share"
 # Set pkg-config path to also search mingw libs
 export PATH="$TARGET/bin:$PATH"
 export PKG_CONFIG_PATH="$TARGET/share/pkgconfig:$TARGET/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
+# aclocal path
+export ACLOCAL="aclocal -I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
 # Compiler flags
 export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib" 
 export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
@@ -259,14 +260,9 @@ function install_git_source () {
 		libtoolize -i || bail "Failed to run libtoolize"
 		
         if [ ! -z "$3" ]; then
-			#X11 ignores the --prefix option, so...
-			if [ "$3" = "--x11" ]; then
-				autoreconf -fiv $AMPREFIX || bail "Autoreconf failed"
-			else
-				eval "$3" || bail "Failed to generate makefiles"
-			fi
+			eval "$3" || bail "Failed to generate makefiles"
         else
-            ./autogen.sh --prefix $TARGET || bail "Failed to autogen"
+            ./autogen.sh || bail "Failed to autogen"
         fi
         touch .gen-configure-complete
     fi
@@ -288,18 +284,18 @@ xlib=X.Org/lib
 xcb=X.Org/xcb
 
 install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros" 
-install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "--x11" "x11proto.patch"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/bigreqsproto" "bigreqsproto" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto" "--x11"
-install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto" "--x11"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "" "x11proto.patch"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/bigreqsproto" "bigreqsproto"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto"
+install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto"
+install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto"
 
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "--x11" "libxtrans.patch"
-install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "--x11" "libxcb.patch" \
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "" "libxtrans.patch"
+install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "" "libxcb.patch" \
 "
 LIBS=-lws2_32
 --disable-composite
@@ -328,10 +324,10 @@ LIBS=-lws2_32
 --disable-xv
 --disable-xvmc
 "
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "--x11" "libx11.patch"  "--disable-ipv6"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender" "--x11"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "--x11" "libXft.patch"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "" "libx11.patch"  "--disable-ipv6"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" "" "libxext.patch"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "libXft.patch"
 
 log_status "Installing Cairo..."
 install_source_patch cairo-1.12.16.tar.xz "" "cairo.patch" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-pdf --disable-svg "
@@ -339,7 +335,6 @@ install_source_patch cairo-1.12.16.tar.xz "" "cairo.patch" "--enable-xlib --enab
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
 install_source pango-1.36.3.tar.xz "" "--with-xft --with-cairo"
-#install_git_source "https://git.gnome.org/browse/pango" "pango" "--x11" "" "--with-xft"
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
