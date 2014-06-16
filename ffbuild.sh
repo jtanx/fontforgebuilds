@@ -36,23 +36,23 @@ function bail () {
 }
 
 function detect_arch_switch () {
-	local from=".building-$1"
-	local to=".building-$2"
-	
-	if [ -f "$from" ]; then
-		if [ "$noconfirm" = "--yes" ]; then
-			git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
-		else
-			read -p "Architecture change detected! ReleasePackage must be reset. Continue? [y/N]: " arch_confirm
-			case $arch_confirm in
-				[Yy]* ) git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"; break;;
-				* ) bail "Not overwriting ReleasePackage" ;;
-			esac
-		fi
-	fi
-	
-	rm -f $from
-	touch $to
+    local from=".building-$1"
+    local to=".building-$2"
+    
+    if [ -f "$from" ]; then
+        if [ "$noconfirm" = "--yes" ]; then
+            git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
+        else
+            read -p "Architecture change detected! ReleasePackage must be reset. Continue? [y/N]: " arch_confirm
+            case $arch_confirm in
+                [Yy]* ) git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"; break;;
+                * ) bail "Not overwriting ReleasePackage" ;;
+            esac
+        fi
+    fi
+    
+    rm -f $from
+    touch $to
 }
 
 # Preamble
@@ -69,31 +69,31 @@ DBSYMBOLS=$BASE/debugging-symbols/.debug/
 
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then
-	log_note "Building 32-bit version!"
+    log_note "Building 32-bit version!"
 
-	ARCH="32-bit"
-	MINGVER=mingw32
-	MINGOTHER=mingw64
-	HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
-	PMPREFIX="mingw-w64-i686"
-	PYINST=python2
-	PYVER=python2.7
-	VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
-	POTRACE_DIR="potrace-1.11.win32"
+    ARCH="32-bit"
+    MINGVER=mingw32
+    MINGOTHER=mingw64
+    HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
+    PMPREFIX="mingw-w64-i686"
+    PYINST=python2
+    PYVER=python2.7
+    VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
+    POTRACE_DIR="potrace-1.11.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
-	log_note "Building 64-bit version!"
+    log_note "Building 64-bit version!"
 
-	ARCH="64-bit"
-	MINGVER=mingw64
-	MINGOTHER=mingw32
-	HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
-	PMPREFIX="mingw-w64-x86_64"
-	PYINST=python3
-	PYVER=python3.4
-	VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
-	POTRACE_DIR="potrace-1.11.win64"
+    ARCH="64-bit"
+    MINGVER=mingw64
+    MINGOTHER=mingw32
+    HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
+    PMPREFIX="mingw-w64-x86_64"
+    PYINST=python3
+    PYVER=python3.4
+    VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
+    POTRACE_DIR="potrace-1.11.win64"
 else 
-	bail "Unknown build system!"
+    bail "Unknown build system!"
 fi
 
 # Early detection
@@ -233,22 +233,22 @@ function install_git_source () {
     
     log_status "Attempting git install of $2..."
     if [ ! -d "$2" ]; then
-		if [ -d "$BASE/work/$MINGOTHER/$2" ]; then
-			log_status "Found copy from other arch build, performing local clone..."
-			cp -r "$BASE/work/$MINGOTHER/$2" . || bail "Local clone failed"
-			cd "$2"
-			git clean -dxf || bail "Could not clean repository"
-			git reset --hard || bail "Could not reset repository"
-		else
-			log_status "Cloning git repository from $1..."
-			git clone "$1" "$2" || bail "Git clone of $1"
-			cd "$2"
-		fi
-		
-		if [ ! -z "$4" ]; then
-			log_status "Patching the repository..."
-			git apply --ignore-whitespace "$PATCH/$4" || bail "Git patch failed"
-		fi
+        if [ -d "$BASE/work/$MINGOTHER/$2" ]; then
+            log_status "Found copy from other arch build, performing local clone..."
+            cp -r "$BASE/work/$MINGOTHER/$2" . || bail "Local clone failed"
+            cd "$2"
+            git clean -dxf || bail "Could not clean repository"
+            git reset --hard || bail "Could not reset repository"
+        else
+            log_status "Cloning git repository from $1..."
+            git clone "$1" "$2" || bail "Git clone of $1"
+            cd "$2"
+        fi
+        
+        if [ ! -z "$4" ]; then
+            log_status "Patching the repository..."
+            git apply --ignore-whitespace "$PATCH/$4" || bail "Git patch failed"
+        fi
     else
         cd "$2"
         #log_status "Attempting update of git repository..."
@@ -257,10 +257,10 @@ function install_git_source () {
     
     if [ ! -f .gen-configure-complete ]; then
         log_status "Generating configure files..."
-		libtoolize -i || bail "Failed to run libtoolize"
-		
+        libtoolize -i || bail "Failed to run libtoolize"
+        
         if [ ! -z "$3" ]; then
-			eval "$3" || bail "Failed to generate makefiles"
+            eval "$3" || bail "Failed to generate makefiles"
         else
             ./autogen.sh || bail "Failed to autogen"
         fi
@@ -377,20 +377,20 @@ cd $WORK
 
 # fontforge
 if [ ! -d fontforge ]; then
-		if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
-			log_status "Found copy from other arch build, performing local clone..."
-			# Don't use git clone - need the remotes for updating
-			cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
-			cd "fontforge"
-			git clean -dxf || bail "Could not clean repository"
-			git reset --hard || bail "Could not reset repository"
-		else
-			log_status "Cloning the fontforge repository..."
-			git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
-			cd "fontforge"
-		fi
+        if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
+            log_status "Found copy from other arch build, performing local clone..."
+            # Don't use git clone - need the remotes for updating
+            cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
+            cd "fontforge"
+            git clean -dxf || bail "Could not clean repository"
+            git reset --hard || bail "Could not reset repository"
+        else
+            log_status "Cloning the fontforge repository..."
+            git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
+            cd "fontforge"
+        fi
 else
-	cd "fontforge"
+    cd "fontforge"
 fi
 
 if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]; then
@@ -403,12 +403,13 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
     # windows-cross-compile to disable check for libuuid
-	PYTHON=$PYINST \
+    PYTHON=$PYINST \
     ./configure $HOST \
         --enable-shared \
         --disable-static \
         --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
+        --disable-python-extension \
         --without-libzmq \
         --with-freetype-source="$WORK/freetype-2.5.3" \
         --without-libreadline \
@@ -443,14 +444,14 @@ objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge
 log_status "Copying the libraries required by FontForge..."
 for f in $fflibs; do
     filename="$(basename $f)"
-	filenoext="${filename%.*}"
+    filenoext="${filename%.*}"
     strip "$f" -so "$RELEASE/bin/$filename"
-	#cp "$f" "$RELEASE/bin/"
-	if [ -f "$TARGET/bin/$filename" ]; then
-		#Only create debug files for the ones we compiled!
-		objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
-		objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
-	fi
+    #cp "$f" "$RELEASE/bin/"
+    if [ -f "$TARGET/bin/$filename" ]; then
+        #Only create debug files for the ones we compiled!
+        objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
+        objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
+    fi
 done
 
 log_status "Copying the shared folder of FontForge..."
@@ -465,7 +466,7 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     log_status "Installing potrace..."
     mkdir -p potrace
     cd potrace
-	
+    
     if [ ! -d $POTRACE_DIR ]; then
         tar axvf $BINARY/$POTRACE_ARC || bail "Potrace not found!"
     fi
@@ -505,10 +506,10 @@ cd $BASE
 if [ -d "$RELEASE/lib/$PYVER" ]; then
     log_note "Skipping python library copy because folder already exists, and copying is slow."
 else
-	if [ ! -d "$BINARY/$PYVER" ]; then
-		log_note "Python folder not found - running 'strip-python'..."
-		$BASE/strip-python.sh
-	fi
+    if [ ! -d "$BINARY/$PYVER" ]; then
+        log_note "Python folder not found - running 'strip-python'..."
+        $BASE/strip-python.sh
+    fi
     cp -r "$BINARY/$PYVER" "$RELEASE/lib" || bail "Python folder could not be copied"
 fi
 cd $WORK
@@ -518,13 +519,13 @@ find "$RELEASE/lib/$PYVER" -regextype sed -regex ".*\.py[co]" | xargs rm -rfv
 find "$RELEASE/lib/$PYVER" -name "__pycache__" | xargs rm -rfv
 
 if [ "$MSYSTEM" = "MINGW32" ]; then
-	log_status "Copying OpenSSL libraries (for Python hashlib)..."
-	strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
+    log_status "Copying OpenSSL libraries (for Python hashlib)..."
+    strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
 fi
 
-log_status "Copying the Python extension dlls..."
-cp -fv "$TARGET/lib/$PYVER/site-packages/fontforge-0.dll" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
-cp -fv "$TARGET/lib/$PYVER/site-packages/psMat-0.dll" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+#log_status "Copying the Python extension dlls..."
+#cp -fv "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+#cp -fv "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Generating the version file..."
 version_hash=`git -C $WORK/fontforge rev-parse master`

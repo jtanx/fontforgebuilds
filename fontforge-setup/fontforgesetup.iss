@@ -77,7 +77,7 @@ Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: 
 Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\FontForgeBuilds\FontForge"; Flags: uninsdeletekey
+;Root: HKLM; Subkey: "Software\FontForge"; Flags: uninsdeletekey
 Root: HKCR; Subkey: ".sfd"; ValueType: string; ValueName: ""; ValueData: "FontForgeProject"; Flags: uninsdeletevalue 
 Root: HKCR; Subkey: "FontForgeProject"; ValueType: string; ValueName: ""; ValueData: "FontForge Project"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "FontForgeProject\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\share\fontforge\sfd-icon.ico"
@@ -98,10 +98,10 @@ begin
   end;
 end;
 
-procedure CurStepChanged(CurStep: TSetupStep);
-begin
-  if CurStep=ssPostInstall then begin
-     RegWriteStringValue(HKEY_CURRENT_USER, 'Software\FontForgeBuilds\FontForge',
-						 'InstallPath', ExpandConstant('{app}'));
-  end;
-end;
+//procedure CurStepChanged(CurStep: TSetupStep);
+//begin
+//  if CurStep=ssPostInstall then begin
+//     RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\FontForge',
+//						 'InstallPath', ExpandConstant('{app}'));
+//  end;
+//end;
