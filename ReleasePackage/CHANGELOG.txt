@@ -1,3 +1,14 @@
+16-06-14:
+* Build FontForge with Cairo support
+  - Glyph outlines in the editing window are now anti-aliased
+  - The glyph fill operation should be faster
+  - Fontconfig is not used any more
+    - UI fonts are no longer bundled
+* Bundle the Python executable (python.exe as ffpython.exe)
+  - This gives users direct access to the Python distribution bundled with
+    FontForge, so they may install extra Python modules if they need to.
+      - Unfortunately the Python extension cannot be used with the native
+        (official) Python installation as that has been compiled with MSVC.
 14-06-14:
 * Updated to the latest git version 4b0ceb
 * Patched libxcb (courtesy of VcXsrv), allowing libX11 to be upgraded to
@@ -5,7 +16,7 @@
     - Updated all X libraries to the latest git version
 * Fixed resource loading (the background is now white)
 * Fixed scrolling in menus with the scroll wheel
-* Fixed the display of tooltips
+* Fixed the display of tool-tips
 31-05-13:
 * Updated to latest git version 416fb4 + snapping fix
 * TTC handling has been fixed

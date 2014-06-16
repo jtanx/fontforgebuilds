@@ -409,7 +409,6 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
         --disable-static \
         --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
-        --disable-python-extension \
         --without-libzmq \
         --with-freetype-source="$WORK/freetype-2.5.3" \
         --without-libreadline \
@@ -496,12 +495,14 @@ cp -rf $TARGET/lib/pango "$RELEASE/lib"
 log_status "Copying UI fonts..."
 mkdir -p "$RELEASE/share/fonts"
 cp "$UIFONTS"/* "$RELEASE/share/fonts/"
-cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
+#cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
 
 log_status "Copying sfd icon..."
 cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
 
-log_status "Copying the Python libraries..."
+log_status "Copying the Python executable and libraries..."
+# Name the python binary to something custom to avoid clobbering any Python installation that the user already has
+strip "/$MINGVER/bin/$PYINST.exe" -so "$RELEASE/bin/ffpython.exe"
 cd $BASE
 if [ -d "$RELEASE/lib/$PYVER" ]; then
     log_note "Skipping python library copy because folder already exists, and copying is slow."
@@ -523,9 +524,9 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
 fi
 
-#log_status "Copying the Python extension dlls..."
-#cp -fv "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
-#cp -fv "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+log_status "Copying the Python extension dlls..."
+cp -f "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Generating the version file..."
 version_hash=`git -C $WORK/fontforge rev-parse master`
