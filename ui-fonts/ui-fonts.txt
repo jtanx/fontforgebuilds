@@ -1,30 +1,17 @@
-NOTE: With Cairo enabled, FontConfig is no longer used
-for the font backend, so this information no longer
-applies. It is left here in case FontConfig is ever
-used in the future.
-
-
-================IGNORE=================================
-
 Place fonts that you want FontForge to use for its user
 interface here. Common fonts to include would be:
-* Cantarell (Main UI font)
-* Inconsolata (Main monospace UI font)
-* DejaVu Sans/Serif
+* DejaVu Sans/Serif + Sans Mono
+* Inconsolata
 * WenQuanYi / DroidSansFallbackFull (CJK fonts + a lot more)
 
 http://levien.com/type/myfonts/inconsolata.html
 https://sourceforge.net/projects/wqy/
 
-If you instead wish for FontForge to use the Windows font
-folder, you must manually enable this. This is disabled by
-default because FontForge uses FontConfig, which scans the
-Windows font directory every time a new font is added or
-removed. This is a very slow process, and can take quite a
-few minutes for FontForge to load on startup (it can take
-up to 10 minutes, or even more!), which makes it appear as if
-FontForge is freezing.
+=============================================================
 
-To enable scanning of the Windows font directory, edit the file
-'fonts.conf', located in etc/fonts/fonts.conf, and uncomment
-the appropriate line (follow instructions in that file).
+NOTE: With Cairo enabled, FontConfig is no longer used
+for the font backend, and the Windows font subsytem is
+used instead. However, fonts can still be loaded for
+FontForge to use in the case that such fonts don't
+exist on the user's system. The specific fonts used
+must be updated in the FontForge resource file.

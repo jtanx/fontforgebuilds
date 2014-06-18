@@ -148,7 +148,7 @@ if [ ! -f $PMTEST ]; then
     pacman $IOPTS $PMPREFIX-$PYINST $PMPREFIX-openssl # libxslt docbook-xml docbook-xsl
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gcc-fortran $PMPREFIX-gmp
+    pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gmp
     pacman $IOPTS $PMPREFIX-gettext $PMPREFIX-libiconv $PMPREFIX-libtool
 
     log_status "Installing precompiled devel libraries..."
@@ -157,7 +157,7 @@ if [ ! -f $PMTEST ]; then
     pacman $IOPTS $PMPREFIX-zlib $PMPREFIX-libpng $PMPREFIX-giflib $PMPREFIX-libtiff
     pacman $IOPTS $PMPREFIX-libjpeg-turbo $PMPREFIX-libxml2 $PMPREFIX-freetype
     pacman $IOPTS $PMPREFIX-fontconfig $PMPREFIX-glib2 $PMPREFIX-pixman
-    pacman $IOPTS $PMPREFIX-harfbuzz $PMPREFIX-gc #BDW Garbage collector
+    pacman $IOPTS $PMPREFIX-harfbuzz
 
     touch $PMTEST
     log_note "Finished installing precompiled libraries!"
@@ -329,6 +329,7 @@ install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" ""
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "libXft.patch"
 
+#While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
 log_status "Installing Cairo..."
 install_source_patch cairo-1.12.16.tar.xz "" "cairo.patch" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-pdf --disable-svg "
 
@@ -493,9 +494,14 @@ log_status "Copying the Pango modules..."
 cp -rf $TARGET/lib/pango "$RELEASE/lib"
 
 log_status "Copying UI fonts..."
-mkdir -p "$RELEASE/share/fonts"
-cp "$UIFONTS"/* "$RELEASE/share/fonts/"
+rm "$RELEASE/share/fontforge/pixmaps/"*.ttf
+cp "$UIFONTS"/* "$RELEASE/share/fontforge/pixmaps/"
 #cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
+
+if [ -f "$PATCH/fontforge.resources" ]; then
+    log_status "Copying the custom resource file..."
+    cp "$PATCH/fontforge.resources" "$RELEASE/share/fontforge/pixmaps/resources"
+fi
 
 log_status "Copying sfd icon..."
 cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
