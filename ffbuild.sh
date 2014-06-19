@@ -418,10 +418,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-#make -j 4	|| bail "FontForge make"
+make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-#make -j 4 install || bail "FontForge install"
+make -j 4 install || bail "FontForge install"
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`

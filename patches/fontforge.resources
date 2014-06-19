@@ -164,7 +164,7 @@ Gdraw.GMatrixEdit.Box.BorderWidth: 0
 Gdraw.GMatrixEdit.Box.DisabledBackground: #edeceb
 Gdraw.GMatrixEdit.Box.NormalBackground: #ffffff
 Gdraw.GMatrixEdit.Box.Padding: 0
-Gdraw.GMatrixEdit.Font: 400 12pt Inconsolata,monospace
+Gdraw.GMatrixEdit.Font: 400 12pt dejavu sans mono,Inconsolata,monospace
 Gdraw.GMatrixEdit.FrozenCol: #a40000
 Gdraw.GMatrixEdit.RuleCol: #908f8e
 Gdraw.GMatrixEdit.TitleBG: #a09f9e
