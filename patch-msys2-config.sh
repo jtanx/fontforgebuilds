@@ -12,6 +12,13 @@ if ! grep -Fxq "$irc" ~/.inputrc; then
 	bind -f ~/.inputrc
 fi
 
+# Shortcut for grepping c code
+gshort="alias grepc=\"grep -lr --include=\\\"*.[ch]\\\"\""
+if ! grep -Fxq "$gshort" ~/.bash_profile; then
+    log_status "Adding grepc shortcut to ~/.bash_profile..."
+    printf "\n%s\n" "$gshort" >> ~/.bash_profile
+fi
+
 npp="C:/Program Files/Notepad++/notepad++.exe"
 if [ ! -f "$npp" ]; then
 	npp="C:/Program Files (x86)/Notepad++/notepad++.exe"
@@ -32,4 +39,5 @@ if [ ! -z "$npp" ]; then
 	git config --global core.editor "'$npp' -multiInst -notabbar -nosession -noPlugin"
 fi
 
+source ~/.bash_profile
 log_status "Done. You may have to restart the terminal for the changes to work."
