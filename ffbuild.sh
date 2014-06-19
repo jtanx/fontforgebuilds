@@ -418,10 +418,10 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
 fi
 
 log_status "Compiling FontForge..."
-make -j 4	|| bail "FontForge make"
+#make -j 4	|| bail "FontForge make"
 
 log_status "Installing FontForge..."
-make -j 4 install || bail "FontForge install"
+#make -j 4 install || bail "FontForge install"
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
@@ -494,9 +494,16 @@ log_status "Copying the Pango modules..."
 cp -rf $TARGET/lib/pango "$RELEASE/lib"
 
 log_status "Copying UI fonts..."
-rm "$RELEASE/share/fontforge/pixmaps/"*.ttf
-cp "$UIFONTS"/* "$RELEASE/share/fontforge/pixmaps/"
-#cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
+#Remove the old/outdated Inconsolata/Cantarell from pixmaps
+rm "$RELEASE/share/fontforge/pixmaps/"*.ttf > /dev/null 2>&1
+rm "$RELEASE/share/fontforge/pixmaps/"*.otf > /dev/null 2>&1
+#Copy the fonts
+mkdir -p "$RELEASE/share/fonts"
+cp "$UIFONTS"/* "$RELEASE/share/fonts/"
+if [ -z "$(ls -A "$UIFONTS" 2>&1 | grep -v "\\.txt$")" ]; then
+    log_note "No UI fonts specified, copying some standard ones..."
+    cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
+fi
 
 if [ -f "$PATCH/fontforge.resources" ]; then
     log_status "Copying the custom resource file..."
