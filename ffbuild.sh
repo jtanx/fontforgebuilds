@@ -487,6 +487,9 @@ if [ ! -d $RELEASE/bin/VcXsrv ]; then
     cp -rf VcXsrv $RELEASE/bin/
 fi
 
+#AddToPath.bat: Utility to only add a path to PATH if it's not currently there
+cp -v "$PATCH/AddToPath.bat" "$RELEASE/bin/"
+
 log_status "Installing VcXsrv_util..."
 strip $WORK/VcXsrv_util/VcXsrv_util.exe -so "$RELEASE/bin/VcxSrv_util.exe" \
     || bail "VcxSrv_util"
