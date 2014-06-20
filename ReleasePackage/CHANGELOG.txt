@@ -1,5 +1,5 @@
 20-06-14:
-* Upgrade to latest git version 
+* Upgrade to latest git version d4abd3
   - SF issue #6 is fixed
   - Menus are now not absurdly wide
 * Build FontForge with Cairo support
