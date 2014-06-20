@@ -1,14 +1,23 @@
-16-06-14:
+20-06-14:
+* Upgrade to latest git version 
+  - SF issue #6 is fixed
+  - Menus are now not absurdly wide
 * Build FontForge with Cairo support
   - Glyph outlines in the editing window are now anti-aliased
   - The glyph fill operation should be faster
-  - Fontconfig is not used any more
-    - UI fonts are no longer bundled
+  - Fontconfig is not used any more, unless Cairo is disabled (-usecairo=no)
+  - Fonts can be placed in share/fonts or a folder called 'ui-fonts' in your
+    preferences folder and FontForge can use them to display the user interface
+    correctly. If you installed FontForge, this will be 
+    %APPDATA%/FontForge/ui-fonts. This distribution comes pre-bundled with the
+    DejaVu fonts. Cantarell, Inconsolata and WenQuanYi has been dropped.
 * Bundle the Python executable (python.exe as ffpython.exe)
   - This gives users direct access to the Python distribution bundled with
     FontForge, so they may install extra Python modules if they need to.
       - Unfortunately the Python extension cannot be used with the native
         (official) Python installation as that has been compiled with MSVC.
+      - There are limits to what can be installed. Simple extensions are fine.
+        Trying to install something like numpy will not work.
 14-06-14:
 * Updated to the latest git version 4b0ceb
 * Patched libxcb (courtesy of VcXsrv), allowing libX11 to be upgraded to
