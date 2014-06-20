@@ -2,17 +2,19 @@
 # FontForge build script.
 # Uses MSYS2/MinGW-w64
 # Author: Jeremy Tan
-# Usage: ffbuild.sh [--reconfigure]
+# Usage: ffbuild.sh [--reconfigure|--nomake --noconfirm]
 # --reconfigure     Forces the configure script to be rerun for the currently 
 #                   worked-on package.
+# --nomake          Don't make/make install FontForge but do everything else
+# --noconfirm       Don't confirm when switching between the build architecture.
 #
 # This script retrieves and installs all libraries required to build FontForge.
 # It then attempts to compile the latest version of FontForge, and to 
 # subsequently make a redistributable package.
 
 # Retrieve input arguments to script
-reconfigure="$1"
-noconfirm="$2"
+opt1="$1"
+opt2="$2"
 
 # Colourful text
 # Red text
@@ -40,7 +42,7 @@ function detect_arch_switch () {
     local to=".building-$2"
     
     if [ -f "$from" ]; then
-        if [ "$noconfirm" = "--yes" ]; then
+        if [ "$opt2" = "--yes" ]; then
             git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
         else
             read -p "Architecture change detected! ReleasePackage must be reset. Continue? [y/N]: " arch_confirm
@@ -204,7 +206,7 @@ function install_source_patch () {
             fi
         fi
         
-        if [ ! -f "$folder.configure-complete" ] || [ "$reconfigure" = "--reconfigure" ]; then
+        if [ ! -f "$folder.configure-complete" ] || [ "$opt1" = "--reconfigure" ]; then
             log_status "Running the configure script..."
             ./configure $HOST $configflags || bail "$folder"
             touch "$folder.configure-complete"
@@ -394,7 +396,7 @@ else
     cd "fontforge"
 fi
 
-if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]; then
+if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
     log_status "Running the configure script..."
     
     if [ ! -f configure ]; then
@@ -417,11 +419,13 @@ if [ ! -f fontforge.configure-complete ] || [ "$reconfigure" = "--reconfigure" ]
     touch fontforge.configure-complete
 fi
 
-log_status "Compiling FontForge..."
-make -j 4	|| bail "FontForge make"
+if [ "$opt1" != "--nomake" ]; then
+    log_status "Compiling FontForge..."
+    make -j 4	|| bail "FontForge make"
 
-log_status "Installing FontForge..."
-make -j 4 install || bail "FontForge install"
+    log_status "Installing FontForge..."
+    make -j 4 install || bail "FontForge install"
+fi
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
