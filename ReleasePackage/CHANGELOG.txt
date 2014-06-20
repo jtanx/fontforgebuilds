@@ -1,6 +1,6 @@
 20-06-14:
 * Upgrade to latest git version d4abd3
-  - SF issue #6 is fixed
+  - SF issue #8 is fixed
   - Menus are now not absurdly wide
 * Build FontForge with Cairo support
   - Glyph outlines in the editing window are now anti-aliased
