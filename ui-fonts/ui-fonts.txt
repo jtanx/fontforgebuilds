@@ -4,14 +4,17 @@ interface here. Common fonts to include would be:
 * Inconsolata
 * WenQuanYi / DroidSansFallbackFull (CJK fonts + a lot more)
 
+http://dejavu-fonts.org/wiki/Main_Page
 http://levien.com/type/myfonts/inconsolata.html
 https://sourceforge.net/projects/wqy/
 
 =============================================================
 
-NOTE: With Cairo enabled, FontConfig is no longer used
-for the font backend, and the Windows font subsytem is
+NOTE: With Cairo enabled by default, FontConfig is no longer
+used for the font backend, and the Windows font subsytem is
 used instead. However, fonts can still be loaded for
 FontForge to use in the case that such fonts don't
-exist on the user's system. The specific fonts used
-must be updated in the FontForge resource file.
+exist on the user's system. 
+
+The specific fonts used must be updated in the FontForge
+resource file.
