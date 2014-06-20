@@ -466,7 +466,8 @@ rm -f "$RELEASE/share/prefs"
 log_note "Installing custom binaries..."
 cd $WORK
 #AddToPath.bat: Utility to only add a path to PATH if it's not currently there
-cp "$PATCH/AddToPath.bat" "$RELEASE/bin/"
+#Or maybe not. It's crazy slow if PATH is complex.
+#cp "$PATCH/AddToPath.bat" "$RELEASE/bin/"
 
 # potrace - http://potrace.sourceforge.net/#downloading
 if [ ! -f $RELEASE/bin/potrace.exe ]; then

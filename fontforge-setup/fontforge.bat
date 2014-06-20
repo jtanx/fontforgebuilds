@@ -8,12 +8,11 @@ set HOME=%FF%
 ::See share/locale/ for a list of supported language codes
 ::set LANGUAGE=en
 
-
-::Only add to the path if it's not already there
-set FFPATH=%FF%\bin
-call "%FF%\bin\AddToPath" FFPATH /B || goto PathFail
-set FFPATH=%FF%
-call "%FF%\bin\AddToPath" FFPATH /B || goto PathFail
+::Only add to path once
+if not defined FF_PATH_ADDED (
+set PATH=%FF%;%FF%\bin;%PATH%
+set FF_PATH_ADDED=TRUE
+)
 
 "%FF%\bin\VcXsrv_util.exe" -exists || (
 start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :9 -multiwindow -clipboard -silent-dup-error
@@ -23,12 +22,6 @@ start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :9 -multiwindow -clipboard -silent-dup-
 
 "%FF%\bin\fontforge.exe" -nosplash %*
 
-goto ok
-
-:PathFail
-echo Failed to set the PATH variable
-
-:ok
 "%FF%\bin\VcXsrv_util.exe" -close
 :: bye
 
