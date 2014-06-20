@@ -465,6 +465,9 @@ rm -f "$RELEASE/share/prefs"
 
 log_note "Installing custom binaries..."
 cd $WORK
+#AddToPath.bat: Utility to only add a path to PATH if it's not currently there
+cp "$PATCH/AddToPath.bat" "$RELEASE/bin/"
+
 # potrace - http://potrace.sourceforge.net/#downloading
 if [ ! -f $RELEASE/bin/potrace.exe ]; then
     log_status "Installing potrace..."
@@ -486,9 +489,6 @@ if [ ! -d $RELEASE/bin/VcXsrv ]; then
     fi
     cp -rf VcXsrv $RELEASE/bin/
 fi
-
-#AddToPath.bat: Utility to only add a path to PATH if it's not currently there
-cp -v "$PATCH/AddToPath.bat" "$RELEASE/bin/"
 
 log_status "Installing VcXsrv_util..."
 strip $WORK/VcXsrv_util/VcXsrv_util.exe -so "$RELEASE/bin/VcxSrv_util.exe" \
