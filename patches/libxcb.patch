@@ -1,11 +1,11 @@
 diff --git a/configure.ac b/configure.ac
-index 68c3b2f..bd8b086 100644
+index 6e7e9c3..fb91750 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -51,7 +51,7 @@ AC_SUBST(HTML_CHECK_RESULT)
  
  # Checks for pkg-config packages
- PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.10)
+ PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.11)
 -NEEDED="pthread-stubs xau >= 0.99.2"
 +NEEDED="xau >= 0.99.2"
  PKG_CHECK_MODULES(NEEDED, $NEEDED)
@@ -27,8 +27,8 @@ index 68c3b2f..bd8b086 100644
 +
  AC_SEARCH_LIBS(connect, socket)
  
- AC_ARG_ENABLE(sendfds, AS_HELP_STRING([--disable-sendfds], [Support FD passing (default: auto)]),
-@@ -187,7 +195,17 @@ AC_SUBST(xcbincludedir)
+ # Find support for sending a message from a socket
+@@ -181,7 +189,15 @@ AC_SUBST(xcbincludedir)
  
  XCB_CHECK_VISIBILITY()
  
@@ -42,13 +42,11 @@ index 68c3b2f..bd8b086 100644
 +			AC_CHECK_FUNC(getaddrinfo, [AC_DEFINE(HAVE_GETADDRINFO, 1, [getaddrinfo() function is available])], )
 +	;;
 +esac
-+
-+
  
  case $host_os in
          # darwin through Snow Leopard has poll() but can't be used to poll character devices.
 diff --git a/src/xcb.h b/src/xcb.h
-index c17a2ef..2246678 100644
+index 23fe74e..453acaf 100644
 --- a/src/xcb.h
 +++ b/src/xcb.h
 @@ -27,6 +27,13 @@
@@ -109,7 +107,7 @@ index 29e2b6f..6db629b 100644
  {
      socklen_t socknamelen = sizeof(struct sockaddr) + INITIAL_SOCKNAME_SLACK;
 diff --git a/src/xcb_conn.c b/src/xcb_conn.c
-index fa50985..7a3e2ac 100644
+index fa50985..f3c8321 100644
 --- a/src/xcb_conn.c
 +++ b/src/xcb_conn.c
 @@ -84,7 +84,7 @@ static int set_fd_flags(const int fd)
@@ -155,7 +153,7 @@ index fa50985..7a3e2ac 100644
 +      size_t l= vec->iov_len;
 +      while (l > 0)
 +    {
-+         int ret = send(c->fd, p, l, 0); 
++         int ret = send(c->fd, p, l, 0);
           if(ret == SOCKET_ERROR)
           {
 -             err  = WSAGetLastError();
