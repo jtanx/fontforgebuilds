@@ -1,7 +1,7 @@
 @echo off
 echo Configuring the system path to add FontForge...
 set FF=%~dp0
-set PATH=%FF%;%FF%\bin;%PATH%
+set "PATH=%FF%;%FF%\bin;%PATH%"
 set FF_PATH_ADDED=TRUE
 
 echo Configuration complete. You can now call 'fontforge' from the console.

@@ -10,7 +10,7 @@ set HOME=%FF%
 
 ::Only add to path once
 if not defined FF_PATH_ADDED (
-set PATH="%FF%;%FF%\bin;%PATH%"
+set "PATH=%FF%;%FF%\bin;%PATH%"
 set FF_PATH_ADDED=TRUE
 )
 
