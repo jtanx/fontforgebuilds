@@ -337,7 +337,7 @@ install_source_patch cairo-1.12.16.tar.xz "" "cairo.patch" "--enable-xlib --enab
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
-install_source pango-1.36.3.tar.xz "" "--with-xft --with-cairo"
+install_source pango-1.36.7.tar.xz "" "--with-xft --with-cairo"
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
