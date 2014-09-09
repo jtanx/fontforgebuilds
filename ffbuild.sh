@@ -406,6 +406,7 @@ if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
     # windows-cross-compile to disable check for libuuid
+	#LIBS="${LIBS} -lmsvcr100" \
     PYTHON=$PYINST \
     ./configure $HOST \
         --enable-shared \
@@ -429,6 +430,7 @@ fi
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
+log_note "The executable: $ffex"
 fflibs=`ldd "$ffex" \
 | grep dll \
 | sed -e '/^[^\t]/ d'  \
@@ -550,9 +552,11 @@ cp -f "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site
 cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Generating the version file..."
+actual_branch=`git -C $WORK/fontforge rev-parse --abbrev-ref HEAD`
+actual_hash=`git -C $WORK/fontforge rev-parse HEAD`
 version_hash=`git -C $WORK/fontforge rev-parse master`
 current_date=`date "+%c %z"`
-printf "FontForge Windows build ($ARCH)\r\n$version_hash ($current_date)\r\n\r\n" > $RELEASE/VERSION.txt
+printf "FontForge Windows build ($ARCH)\r\n$current_date\r\n$actual_hash [$actual_branch]\r\nBased on master: $version_hash\r\n\r\n" > $RELEASE/VERSION.txt
 printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
 cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
 
