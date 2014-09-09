@@ -1,5 +1,13 @@
 #!/bin/sh
 
+#Detect 7-zip version to use
+WSZIP="/c/Program Files/7-Zip/7z.exe"
+if [ -f "$WSZIP" ]; then
+    SZIP="$WSZIP"
+else
+    SZIP="7za"
+fi
+
 # Colourful text
 # Red text
 function log_error() {
@@ -21,6 +29,20 @@ function bail () {
     exit 1
 }
 
+function check_overwrite() {
+	if [ -f "$1" ]; then
+		read -p "File exists. Overwrite? [y/N]: " overwrite
+		case $overwrite in
+			[Yy]* ) rm -fv "$1" || bail "Could not remove $1"; break;;
+			* ) bail "Not overwriting $1." ;;
+		esac
+	fi
+}
+
+function szip_folder() {
+	"$SZIP" a -t7z -mx=9 -m0=lzma2 -md=128m "$1"  "$2"/* "${@:3}"
+}
+
 if [ -z "$1" ]; then
     postfix="r1"
 else
@@ -40,6 +62,7 @@ BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SETUP=$BASE/fontforge-setup
 WORK=$BASE/work/$MINGVER/
 RELEASE=$BASE/ReleasePackage/
+DEBUG=$BASE/debugging-symbols/
 
 log_note "Packaging $ARCH-bit release..."
 pacman -S --noconfirm --needed p7zip > /dev/null 2>&1 
@@ -48,23 +71,14 @@ version_hash=`git -C $WORK/fontforge rev-parse master`
 version_hash=${version_hash:0:6}
 log_status "Version hash is $version_hash"
 
+log_status "Building the release archive..."
 filename="$PKGPREFIX-$version_hash-$postfix.7z"
 log_status "Name is $filename"
+check_overwrite "$filename"
+szip_folder "$filename" "$RELEASE"
 
-log_status "Building the archive..."
-if [ -f "$filename" ]; then
-    read -p "File exists. Overwrite? [y/N]: " overwrite
-    case $overwrite in
-        [Yy]* ) rm -fv "$filename" || bail "Could not remove $filename"; break;;
-        * ) bail "Not overwriting $filename." ;;
-    esac
-fi
-
-wszip="/c/Program Files/7-Zip/7z.exe"
-if [ -f "$wszip" ]; then
-    szip="$wszip"
-else
-    szip="7za"
-fi
-
-"$szip" a -t7z -mx=9 -m0=lzma2 -md=128m "$filename"  "$RELEASE"/*
+log_status "Building the debug archive..."
+debugname="$PKGPREFIX-$version_hash-$postfix-debugging-symbols.7z"
+log_status "Name is $debugname"
+check_overwrite "$debugname"
+szip_folder "$debugname" "$DEBUG" "$DEBUG/.debug"
