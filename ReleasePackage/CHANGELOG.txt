@@ -1,3 +1,8 @@
+18-10-14:
+* Bug-fix for the file picker dialogue. Makes it much more robust to Windows
+  file paths.
+14-10-14:
+* Build for the 20141014 release
 20-06-14:
 * Upgrade to latest git version d4abd3
   - SF issue #8 is fixed
