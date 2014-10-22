@@ -170,14 +170,15 @@ else
 fi # pacman installed
 
 # Install from tarball
-# install_source_raw(file, folder_name, patch, configflags, premakeflags, postmakeflags)
+# install_source_raw(file, folder_name, patch, custom_configgen, configflags, premakeflags, postmakeflags)
 function install_source_patch () {
     local file=$1
     local folder=$2
     local patch=$3
-    local configflags=$4
-    local premakeflags=$5
-    local postmakeflags=$6
+    local configgen=$4
+    local configflags=$5
+    local premakeflags=$6
+    local postmakeflags=$7
     
     # Default to the name of the archive, if folder name is not given
     if [ -z "$folder" ]; then
@@ -195,7 +196,7 @@ function install_source_patch () {
         fi
         
         cd $folder || bail "$folder"
-        if [ ! -z $patch ]; then
+        if [ ! -z "$patch" ]; then
             log_status "Patching $folder with $patch..."
             # Check if it's already been applied or not
             patch -p1 -N --dry-run --silent < $PATCH/$patch 2>/dev/null
@@ -204,6 +205,12 @@ function install_source_patch () {
             else
                 log_note "Sensed that patch has already been applied; skipping"
             fi
+        fi
+        
+        if [ ! -z "$configgen" ] && [ ! -f "$folder.configgen-complete" ]; then
+            log_status "Running the config generation script..."
+            eval "$configgen" || bail "Config generation failed"
+            touch "$folder.configgen-complete"
         fi
         
         if [ ! -f "$folder.configure-complete" ] || [ "$opt1" = "--reconfigure" ]; then
@@ -226,7 +233,7 @@ function install_source_patch () {
 
 # install_source(file, folder_name, configflags, premakeflags, postmakeflags)
 function install_source () {
-    install_source_patch "$1" "$2" "" "${@:3}"
+    install_source_patch "$1" "$2" "" "${@:4}"
 }
 
 # install_source(git_link, folder_name, custom_configgen, patchfile, configflags, premakeflags, postmakeflags)
@@ -333,7 +340,9 @@ install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "
 
 #While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
 log_status "Installing Cairo..."
-install_source_patch cairo-1.12.16.tar.xz "" "cairo.patch" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-pdf --disable-svg "
+#Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
+CFLAGS="${CFLAGS} -D_POSIX" \
+install_source_patch cairo-1.14.0.tar.xz "" "cairo.patch" "autoreconf -fiv" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-pdf --disable-svg "
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
@@ -406,7 +415,8 @@ if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
     # windows-cross-compile to disable check for libuuid
-	#LIBS="${LIBS} -lmsvcr100" \
+    #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
+    #LIBS="${LIBS} -lmsvcr100" \
     PYTHON=$PYINST \
     ./configure $HOST \
         --enable-shared \
