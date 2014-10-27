@@ -233,13 +233,12 @@ function install_source_patch () {
 
 # install_source(file, folder_name, configflags, premakeflags, postmakeflags)
 function install_source () {
-    install_source_patch "$1" "$2" "" "${@:4}"
+    install_source_patch "$1" "$2" "" "" "${@:3}"
 }
 
 # install_source(git_link, folder_name, custom_configgen, patchfile, configflags, premakeflags, postmakeflags)
 function install_git_source () {
     cd $WORK
-    
     log_status "Attempting git install of $2..."
     if [ ! -d "$2" ]; then
         if [ -d "$BASE/work/$MINGOTHER/$2" ]; then
@@ -253,16 +252,26 @@ function install_git_source () {
             git clone "$1" "$2" || bail "Git clone of $1"
             cd "$2"
         fi
-        
-        if [ ! -z "$4" ]; then
-            log_status "Patching the repository..."
-            git apply --ignore-whitespace "$PATCH/$4" || bail "Git patch failed"
-        fi
     else
         cd "$2"
         #log_status "Attempting update of git repository..."
         #git pull --rebase || log_note "Failed to update. Unstaged changes?"
     fi
+    
+    if [ ! -z "$4" ]; then
+        #Just a bit too verbose
+        #log_status "Checking if the patch needs to be applied..."
+        git apply --check --ignore-whitespace "$PATCH/$4" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            log_status "Patching the repository..."
+            git apply --ignore-whitespace "$PATCH/$4" || bail "Git patch failed"
+            log_note "Patch applied."
+        #else
+        #    log_note "Patch already applied or not applicable. Continuing..."
+        fi 
+    fi
+    
+    #patch -p1 -N --dry-run --silent < $PATCH/$patch 2>/dev/null
     
     if [ ! -f .gen-configure-complete ]; then
         log_status "Generating configure files..."
@@ -304,9 +313,8 @@ install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto"
 
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "" "libxtrans.patch"
-install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "" "libxcb.patch" \
+LIBS="-lws2_32" install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "" "libxcb.patch" \
 "
-LIBS=-lws2_32
 --disable-composite
 --disable-damage
 --disable-dpms
