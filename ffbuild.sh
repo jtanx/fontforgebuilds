@@ -350,7 +350,7 @@ install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "
 log_status "Installing Cairo..."
 #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
 CFLAGS="${CFLAGS} -D_POSIX" \
-install_source_patch cairo-1.14.0.tar.xz "" "cairo.patch" "autoreconf -fiv" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-pdf --disable-svg "
+install_source_patch cairo-1.14.0.tar.xz "" "cairo.patch" "autoreconf -fiv" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
