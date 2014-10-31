@@ -349,8 +349,7 @@ install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "
 #While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
 log_status "Installing Cairo..."
 #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
-CFLAGS="${CFLAGS} -D_POSIX" \
-install_source_patch cairo-1.14.0.tar.xz "" "cairo.patch" "autoreconf -fiv" "--enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
+install_source_patch cairo-1.14.0.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
@@ -429,7 +428,6 @@ if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
     ./configure $HOST \
         --enable-shared \
         --disable-static \
-        --enable-windows-cross-compile \
         --datarootdir=/usr/share/share_ff \
         --without-libzmq \
         --with-freetype-source="$WORK/freetype-2.5.3" \
