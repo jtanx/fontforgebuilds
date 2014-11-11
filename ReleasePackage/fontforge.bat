@@ -11,12 +11,12 @@ set FF_PORTABLE=TRUE
 
 ::Only add to path once
 if not defined FF_PATH_ADDED (
-set "PATH=%FF%;%FF%\bin;%PATH%"
+set "PATH=%FF%;%FF%\bin;%PATH:"=%"
 set FF_PATH_ADDED=TRUE
 )
 
 "%FF%\bin\VcXsrv_util.exe" -exists || (
-start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :9 -multiwindow -clipboard -silent-dup-error
+start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :11 -multiwindow -clipboard -silent-dup-error
 )
 
 "%FF%\bin\VcXsrv_util.exe" -wait
