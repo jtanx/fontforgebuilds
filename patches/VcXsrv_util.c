@@ -1,6 +1,7 @@
 #include <Windows.h>
 #include <stdio.h>
 #include <Strsafe.h>
+#define DEFAULT_XPORT 11
 
 BOOL CALLBACK enumproc(HWND hwnd, LPARAM lp){
 	DWORD* param = (DWORD*)lp;
@@ -22,12 +23,24 @@ BOOL CALLBACK enumproc(HWND hwnd, LPARAM lp){
 int wmain(int argc, WCHAR* argv[]){
 	WCHAR buffer[BUFSIZ];
 	WCHAR computername[BUFSIZ];
+    WCHAR *xport = _wgetenv(L"FF_XPORT"), *ptr;
 	DWORD computernamesize =  BUFSIZ;
+    LONG port = DEFAULT_XPORT;
+    
 	if (!GetComputerNameEx(ComputerNameDnsHostname, computername, &computernamesize)){
 		computername[0] = L'\0'; //ignore
 	}
+    
+    //Check if environment variable for the X server port is set or not
+    if (xport) {
+        port = wcstol(xport, &ptr, 10);
+        if (*ptr != L'\0' || port < 1 || port > 65535) {
+            port = DEFAULT_XPORT;
+        }
+    }
 	
-	StringCchPrintf(buffer, BUFSIZ, L"VcXsrv Server - Display %s:9.0", computername);
+	StringCchPrintf(buffer, BUFSIZ, L"VcXsrv Server - Display %s:%d.0", 
+					computername, port);
 	//fwprintf(stderr, L"Window name: %s\n", buffer);
 	
 	

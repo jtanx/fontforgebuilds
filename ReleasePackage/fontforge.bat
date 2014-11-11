@@ -1,6 +1,7 @@
 @ECHO OFF
 set FF=%~dp0
-set DISPLAY=127.0.0.1:9.0
+set FF_XPORT=12
+set DISPLAY=127.0.0.1:%FF_XPORT%.0
 set XLOCALEDIR=%FF%\bin\VcXsrv\locale
 set AUTOTRACE=potrace
 set HOME=%FF%
@@ -16,7 +17,7 @@ set FF_PATH_ADDED=TRUE
 )
 
 "%FF%\bin\VcXsrv_util.exe" -exists || (
-start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :11 -multiwindow -clipboard -silent-dup-error
+start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :%FF_XPORT% -multiwindow -clipboard -silent-dup-error
 )
 
 "%FF%\bin\VcXsrv_util.exe" -wait
