@@ -1,3 +1,9 @@
+11-11-14:
+* Update to latest git version a7edc6
+* Fix potential PATH issue for PATHs containing double quotes (GH #1907)
+* Switch to different X server port (11) to avoid potential conflict with old
+  versions of FontForge (2012/2013 versions)
+    - Update VcXsrv_util to allow for dynamic switching of the port used
 24-10-14:
 * Update to latest git version 6df34b
 18-10-14:
