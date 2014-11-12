@@ -87,7 +87,53 @@ Root: HKCR; Subkey: "FontForgeProject\shell\open\command"; ValueType: string; Va
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Code]
+procedure RecursiveDelete(Folder : String; Pattern : String; Extensions : TStringList);
+var
+  SearchPath : String;                             
+  FilePath : String;
+  FindRec : TFindRec;
+begin
+  //First search the current folder for any files matching the pattern
+  SearchPath := ExpandConstant(Folder + '\' + Pattern);
+  Log('[Recursive] searching ' + SearchPath);
+  if FindFirst(SearchPath, FindRec) then begin
+      try
+        repeat
+          if FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY = 0 then begin
+              if Extensions.IndexOf(ExtractFileExt(FindRec.Name)) <> -1 then begin
+                FilePath := ExpandConstant(Folder + '\' + FindRec.Name);
+                Log('[Recursive] Deleting ' + FilePath);
+                DeleteFile(FilePath);
+              end;
+          end;
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
+  end;
+
+  //Now recursively search any subdirectories
+  SearchPath := ExpandConstant(Folder + '\*');
+  Log('[Recursive] searching ' + SearchPath);
+  if FindFirst(SearchPath, FindRec) then begin 
+      try
+        repeat
+          if ((FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) and
+             (CompareStr(FindRec.Name, '.') <> 0) and (CompareStr(FindRec.Name, '..') <> 0) then begin
+            FilePath := ExpandConstant(Folder + '\' + FindRec.Name);
+            Log('[Recursive] now searching: ' + FilePath);
+            RecursiveDelete(FilePath, Pattern, Extensions);
+          end;
+        until not FindNext(FindRec);
+      finally
+        FindClose(FindRec);
+      end;
+  end;
+end;
+
+
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+var ExtensionsToDelete : TStringList;
 begin
   if CurUninstallStep = usUninstall then
   begin
@@ -95,6 +141,13 @@ begin
     begin
       DelTree(ExpandConstant('{userappdata}\FontForge'), True, True, True);
     end;
+
+    Log('Removing Python cache files (.pyc/.pyo)...');
+    ExtensionsToDelete := TStringList.Create;
+    ExtensionsToDelete.Add('.pyc');
+    ExtensionsToDelete.Add('.pyo');
+    RecursiveDelete('{app}\lib\python2.7', '*.py*', ExtensionsToDelete);
+    ExtensionsToDelete.Free;
   end;
 end;
 
