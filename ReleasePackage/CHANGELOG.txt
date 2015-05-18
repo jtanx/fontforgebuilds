@@ -1,4 +1,12 @@
-03-01-14:
+01-05-15:
+* Build for the 20150430 release 
+03-04-15:
+* Build for 20150330 release (ab4d46) + 902919
+* Hovering over PDF files in the file browser should now be fast(er)
+  - Disabled scanning of fonts in the PDF files (slow, buggy)
+03-03-15:
+* Build for the 20150228 release (a875b4) + 7fc848
+03-01-15:
 * Downgraded glib to 2.42.0-1 (XP compatibility)
 31-12-14:
 * Build for the 20141230 release (6bfa9e)

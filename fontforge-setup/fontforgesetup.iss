@@ -31,6 +31,7 @@ SetupIconFile=Graphics\fontforge-installer-icon.ico
 Compression=lzma2/max
 SolidCompression=yes
 ChangesAssociations=yes
+PrivilegesRequired=poweruser
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

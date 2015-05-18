@@ -47,7 +47,11 @@ function detect_arch_switch () {
         else
             read -p "Architecture change detected! ReleasePackage must be reset. Continue? [y/N]: " arch_confirm
             case $arch_confirm in
-                [Yy]* ) git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"; break;;
+                [Yy]* )
+                    git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
+                    rm -rf "$DBSYMBOLS"
+                    mkdir -p "$DBSYMBOLS"
+                    break;;
                 * ) bail "Not overwriting ReleasePackage" ;;
             esac
         fi
@@ -386,9 +390,9 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
 fi
 
 # For the source only; to enable the debugger in FontForge
-if [ ! -d freetype-2.5.3 ]; then
-    log_status "Extracting the FreeType 2.5.3 source..."
-    tar axvf "$SOURCE/freetype-2.5.3.tar.bz2" || bail "FreeType2 extraction"
+if [ ! -d freetype-2.5.5 ]; then
+    log_status "Extracting the FreeType 2.5.5 source..."
+    tar axvf "$SOURCE/freetype-2.5.5.tar.bz2" || bail "FreeType2 extraction"
 fi
 
 log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -430,7 +434,7 @@ if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
         --disable-static \
         --datarootdir=/usr/share/share_ff \
         --without-libzmq \
-        --with-freetype-source="$WORK/freetype-2.5.3" \
+        --with-freetype-source="$WORK/freetype-2.5.5" \
         --without-libreadline \
         || bail "FontForge configure"
     touch fontforge.configure-complete
