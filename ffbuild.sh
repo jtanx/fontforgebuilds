@@ -353,11 +353,11 @@ install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "
 #While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
 log_status "Installing Cairo..."
 #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
-install_source_patch cairo-1.14.0.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
+install_source_patch cairo-1.14.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
-install_source pango-1.36.7.tar.xz "" "--with-xft --with-cairo"
+install_source pango-1.36.8.tar.xz "" "--with-xft --with-cairo"
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
