@@ -96,7 +96,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     PMPREFIX="mingw-w64-x86_64"
     PYINST=python3
     PYVER=python3.4
-    VCXSRV="VcXsrv-1.15.0.2-x86_64-minimal.tar.bz2"
+    VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
     POTRACE_DIR="potrace-1.11.win64"
 else 
     bail "Unknown build system!"
