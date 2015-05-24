@@ -1,0 +1,51 @@
+From 0058974abdb9d3bbe00cb9bb5d389c0e583f3ef1 Mon Sep 17 00:00:00 2001
+From: Jeremy Tan <jtanx@outlook.com>
+Date: Mon, 18 May 2015 22:07:36 +0800
+Subject: [PATCH] Reorder the check for gethostname if Winsock is present.
+
+---
+ m4/gethostname.m4 | 19 +++++++++++--------
+ 1 file changed, 11 insertions(+), 8 deletions(-)
+
+diff --git a/m4/gethostname.m4 b/m4/gethostname.m4
+index 0721697..4c47061 100644
+--- a/m4/gethostname.m4
++++ b/m4/gethostname.m4
+@@ -15,8 +15,7 @@ AC_DEFUN([gl_FUNC_GETHOSTNAME],
+   dnl Where is gethostname() defined?
+   dnl - On native Windows, it is in ws2_32.dll.
+   dnl - Otherwise it is in libc.
+-  GETHOSTNAME_LIB=
+-  AC_CHECK_FUNCS([gethostname], , [
++  if test $UNISTD_H_HAVE_WINSOCK2_H = 1; then
+     AC_CACHE_CHECK([for gethostname in winsock2.h and -lws2_32],
+       [gl_cv_w32_gethostname],
+       [gl_cv_w32_gethostname=no
+@@ -29,14 +28,18 @@ AC_DEFUN([gl_FUNC_GETHOSTNAME],
+ #include <stddef.h>
+ ]], [[gethostname(NULL, 0);]])], [gl_cv_w32_gethostname=yes])
+        LIBS="$gl_save_LIBS"
+-      ])
+-    if test "$gl_cv_w32_gethostname" = "yes"; then
+-      GETHOSTNAME_LIB="-lws2_32"
+-    fi
+-  ])
++    ])
++  fi
++
++  GETHOSTNAME_LIB=
++  if test "$gl_cv_w32_gethostname" = "yes"; then
++    GETHOSTNAME_LIB="-lws2_32"
++  else
++    AC_CHECK_FUNCS([gethostname])
++  fi
+   AC_SUBST([GETHOSTNAME_LIB])
+ 
+-  if test "$ac_cv_func_gethostname" = no; then
++  if test "x$ac_cv_func_gethostname" != "xyes"; then
+     HAVE_GETHOSTNAME=0
+   fi
+ 
+-- 
+2.4.1
+
