@@ -84,7 +84,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     PMPREFIX="mingw-w64-i686"
     PYINST=python2
     PYVER=python2.7
-    VCXSRV="VcXsrv-1.14.2-minimal.tar.bz2"
+    VCXSRV="VcXsrv-1.14.2-minimal.tar.xz"
     POTRACE_DIR="potrace-1.11.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
@@ -345,7 +345,7 @@ LIBS="-lws2_32" install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "l
 --disable-xv
 --disable-xvmc
 "
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "" "libx11.patch"  "--disable-ipv6"
+install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "" "libx11.patch"  "--disable-ipv6 --enable-xlocaledir"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" "" "libxext.patch"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender"
 install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "libXft.patch"
