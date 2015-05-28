@@ -78,6 +78,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     log_note "Building 32-bit version!"
 
     ARCH="32-bit"
+    ARCHNUM="32"
     MINGVER=mingw32
     MINGOTHER=mingw64
     HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
@@ -90,6 +91,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
 
     ARCH="64-bit"
+    ARCHNUM="64"
     MINGVER=mingw64
     MINGOTHER=mingw32
     HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
@@ -479,6 +481,10 @@ for f in $fflibs; do
         objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
     fi
 done
+
+log_status "Copying glib spawn helpers..."
+strip "/$MINGVER/bin/gspawn-win$ARCHNUM-helper.exe" -so "$RELEASE/bin/gspawn-win$ARCHNUM-helper.exe" || bail "Glib spawn helper not found!"
+strip "/$MINGVER/bin/gspawn-win$ARCHNUM-helper-console.exe" -so "$RELEASE/bin/gspawn-win$ARCHNUM-helper-console.exe" || bail "Glib spawn helper not found!"
 
 log_status "Copying the shared folder of FontForge..."
 cp -rf /usr/share/share_ff/fontforge "$RELEASE/share/"

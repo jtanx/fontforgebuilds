@@ -1,3 +1,5 @@
+26-05-15:
+* Using GLib for Unicode file browsing (opening fix TBA)
 24-05-15:
 * Attempt fix at keyboard layout settings.
 19-05-15:
