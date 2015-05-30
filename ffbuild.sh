@@ -540,9 +540,6 @@ log_status "Installing run_fontforge..."
 strip $WORK/run_fontforge/run_fontforge.exe -so "$RELEASE/run_fontforge.exe" \
     || bail "run_fontforge"
 
-log_status "Copying the Pango modules..."
-cp -rf $TARGET/lib/pango "$RELEASE/lib"
-
 log_status "Copying UI fonts..."
 #Remove the old/outdated Inconsolata/Cantarell from pixmaps
 rm "$RELEASE/share/fontforge/pixmaps/"*.ttf > /dev/null 2>&1
