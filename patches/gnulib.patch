@@ -50,31 +50,32 @@ index 0721697..4c47061 100644
 2.4.1
 
 
-From 7f8a88084ed648229be06493b245fc5ddf897481 Mon Sep 17 00:00:00 2001
+From 3b108ca5f725889258bfe05681cb3911007d3207 Mon Sep 17 00:00:00 2001
 From: Jeremy Tan <jtanx@outlook.com>
 Date: Sat, 30 May 2015 10:08:48 +0800
 Subject: [PATCH] Enable Unicode support for open and fopen on Windows
 
 ---
- lib/fopen.c | 23 +++++++++++++++++++++++
- lib/open.c  | 16 ++++++++++++++++
- 2 files changed, 39 insertions(+)
+ lib/fopen.c | 25 ++++++++++++++++++++++++-
+ lib/open.c  | 18 +++++++++++++++++-
+ 2 files changed, 41 insertions(+), 2 deletions(-)
 
 diff --git a/lib/fopen.c b/lib/fopen.c
-index 139ede2..f645cca 100644
+index 139ede2..e8eb7c6 100644
 --- a/lib/fopen.c
 +++ b/lib/fopen.c
-@@ -24,12 +24,35 @@
-
+@@ -24,12 +24,36 @@
+ 
  /* Get the original definition of fopen.  It might be defined as a macro.  */
  #include <stdio.h>
++#include <errno.h>
 +/* Get the character set conversion functions for Windows. */
 +#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
 +# include <limits.h>
 +# include <Stringapiset.h>
 +#endif
  #undef __need_FILE
-
+ 
  static FILE *
  orig_fopen (const char *filename, const char *mode)
  {
@@ -98,15 +99,25 @@ index 139ede2..f645cca 100644
    return fopen (filename, mode);
 +#endif
  }
-
+ 
  /* Specification.  */
+@@ -37,7 +61,6 @@ orig_fopen (const char *filename, const char *mode)
+    this include because of the preliminary #include <stdio.h> above.  */
+ #include "stdio.h"
+ 
+-#include <errno.h>
+ #include <fcntl.h>
+ #include <string.h>
+ #include <unistd.h>
 diff --git a/lib/open.c b/lib/open.c
-index 95c7811..b6198ba 100644
+index 95c7811..979a059 100644
 --- a/lib/open.c
 +++ b/lib/open.c
-@@ -25,12 +25,28 @@
+@@ -24,13 +24,30 @@
+ 
  /* Get the original definition of open.  It might be defined as a macro.  */
  #include <fcntl.h>
++#include <errno.h>
  #include <sys/types.h>
 +/* Get the character set conversion functions for Windows. */
 +#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
@@ -114,7 +125,7 @@ index 95c7811..b6198ba 100644
 +# include <Stringapiset.h>
 +#endif
  #undef __need_system_fcntl_h
-
+ 
  static int
  orig_open (const char *filename, int flags, mode_t mode)
  {
@@ -131,8 +142,16 @@ index 95c7811..b6198ba 100644
    return open (filename, flags, mode);
 +#endif
  }
-
+ 
  /* Specification.  */
---
+@@ -38,7 +55,6 @@ orig_open (const char *filename, int flags, mode_t mode)
+    this include because of the preliminary #include <fcntl.h> above.  */
+ #include "fcntl.h"
+ 
+-#include <errno.h>
+ #include <stdarg.h>
+ #include <string.h>
+ #include <sys/types.h>
+-- 
 2.4.1
 
