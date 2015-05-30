@@ -86,7 +86,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     PYINST=python2
     PYVER=python2.7
     VCXSRV="VcXsrv-1.14.2-minimal.tar.xz"
-    POTRACE_DIR="potrace-1.11.win32"
+    POTRACE_DIR="potrace-1.12.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
 
@@ -99,7 +99,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     PYINST=python3
     PYVER=python3.4
     VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
-    POTRACE_DIR="potrace-1.11.win64"
+    POTRACE_DIR="potrace-1.12.win64"
 else
     bail "Unknown build system!"
 fi
