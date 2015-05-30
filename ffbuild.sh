@@ -131,13 +131,13 @@ mkdir -p "$TARGET/share"
 export PATH="$TARGET/bin:$PATH"
 export PKG_CONFIG_PATH="$TARGET/share/pkgconfig:$TARGET/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
 # aclocal path
-export ACLOCAL="aclocal -I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
+export ACLOCAL="/bin/aclocal -I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
+export M4="/bin/m4"
 # Compiler flags
 export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib"
 export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
-
 
 # Install all the available precompiled binaries
 if [ ! -f $PMTEST ]; then
@@ -420,7 +420,7 @@ fi
 
 # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
 if [ ! -d gnulib ]; then
-    log_status "Cloning and patching gnulib..."
+    log_status "Cloning gnulib..."
     git clone git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
 fi
 
@@ -428,7 +428,7 @@ git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/nul
 if [ $? -eq 0 ]; then
     log_status "Patching the gnulib..."
     git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
-    rm fontforge.configure-complete configure
+    rm -f fontforge.configure-complete configure
     log_note "Patch applied."
 fi
 
