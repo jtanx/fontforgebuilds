@@ -3,13 +3,13 @@
 # Uses MSYS2/MinGW-w64
 # Author: Jeremy Tan
 # Usage: ffbuild.sh [--reconfigure|--nomake --noconfirm]
-# --reconfigure     Forces the configure script to be rerun for the currently 
+# --reconfigure     Forces the configure script to be rerun for the currently
 #                   worked-on package.
 # --nomake          Don't make/make install FontForge but do everything else
 # --noconfirm       Don't confirm when switching between the build architecture.
 #
 # This script retrieves and installs all libraries required to build FontForge.
-# It then attempts to compile the latest version of FontForge, and to 
+# It then attempts to compile the latest version of FontForge, and to
 # subsequently make a redistributable package.
 
 # Retrieve input arguments to script
@@ -40,7 +40,7 @@ function bail () {
 function detect_arch_switch () {
     local from=".building-$1"
     local to=".building-$2"
-    
+
     if [ -f "$from" ]; then
         if [ "$opt2" = "--yes" ]; then
             git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
@@ -56,7 +56,7 @@ function detect_arch_switch () {
             esac
         fi
     fi
-    
+
     rm -f $from
     touch $to
 }
@@ -100,7 +100,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     PYVER=python3.4
     VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
     POTRACE_DIR="potrace-1.11.win64"
-else 
+else
     bail "Unknown build system!"
 fi
 
@@ -133,7 +133,7 @@ export PKG_CONFIG_PATH="$TARGET/share/pkgconfig:$TARGET/lib/pkgconfig:/$MINGVER/
 # aclocal path
 export ACLOCAL="aclocal -I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
 # Compiler flags
-export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib" 
+export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib"
 export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
@@ -185,13 +185,13 @@ function install_source_patch () {
     local configflags=$5
     local premakeflags=$6
     local postmakeflags=$7
-    
+
     # Default to the name of the archive, if folder name is not given
     if [ -z "$folder" ]; then
         local filename="$(basename $1)"
         folder="${filename%.tar*}"
     fi
-    
+
     cd $WORK
     if [ ! -f "$folder/$folder.complete"  ]; then
         log_status "Installing $folder..."
@@ -200,7 +200,7 @@ function install_source_patch () {
         else
             log_note "Sensing incomplete build, re-attempting the build..."
         fi
-        
+
         cd $folder || bail "$folder"
         if [ ! -z "$patch" ]; then
             log_status "Patching $folder with $patch..."
@@ -212,13 +212,13 @@ function install_source_patch () {
                 log_note "Sensed that patch has already been applied; skipping"
             fi
         fi
-        
+
         if [ ! -z "$configgen" ] && [ ! -f "$folder.configgen-complete" ]; then
             log_status "Running the config generation script..."
             eval "$configgen" || bail "Config generation failed"
             touch "$folder.configgen-complete"
         fi
-        
+
         if [ ! -f "$folder.configure-complete" ] || [ "$opt1" = "--reconfigure" ]; then
             log_status "Running the configure script..."
             ./configure $HOST $configflags || bail "$folder"
@@ -231,7 +231,7 @@ function install_source_patch () {
         eval "$cmd"
         make install || bail "$folder"
         log_status "Installation complete!"
-        
+
         touch "$folder.complete"
         cd ..
     fi
@@ -263,7 +263,7 @@ function install_git_source () {
         #log_status "Attempting update of git repository..."
         #git pull --rebase || log_note "Failed to update. Unstaged changes?"
     fi
-    
+
     if [ ! -z "$4" ]; then
         #Just a bit too verbose
         #log_status "Checking if the patch needs to be applied..."
@@ -274,15 +274,15 @@ function install_git_source () {
             log_note "Patch applied."
         #else
         #    log_note "Patch already applied or not applicable. Continuing..."
-        fi 
+        fi
     fi
-    
+
     #patch -p1 -N --dry-run --silent < $PATCH/$patch 2>/dev/null
-    
+
     if [ ! -f .gen-configure-complete ]; then
         log_status "Generating configure files..."
         libtoolize -i || bail "Failed to run libtoolize"
-        
+
         if [ ! -z "$3" ]; then
             eval "$3" || bail "Failed to generate makefiles"
         else
@@ -290,10 +290,10 @@ function install_git_source () {
         fi
         touch .gen-configure-complete
     fi
-    
+
     cd ..
     install_source "" "$2" "${@:5}"
-    
+
 }
 
 log_status "Installing custom libraries..."
@@ -307,7 +307,7 @@ xproto=X.Org/proto
 xlib=X.Org/lib
 xcb=X.Org/xcb
 
-install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros" 
+install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "" "x11proto.patch"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/bigreqsproto" "bigreqsproto"
@@ -359,7 +359,7 @@ install_source_patch cairo-1.14.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFL
 
 # Download from http://ftp.gnome.org/pub/gnome/sources/pango
 log_status "Installing Pango..."
-install_source pango-1.36.8.tar.xz "" "--with-xft --with-cairo"
+install_source pango-1.37.0.tar.xz "" "--with-xft --with-cairo"
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
@@ -434,7 +434,7 @@ fi
 
 if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
     log_status "Running the configure script..."
-    
+
     if [ ! -f configure ]; then
         log_note "No configure script detected; running ./boostrap..."
         ./bootstrap --force || bail "FontForge autogen"
@@ -516,7 +516,7 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     log_status "Installing potrace..."
     mkdir -p potrace
     cd potrace
-    
+
     if [ ! -d $POTRACE_DIR ]; then
         tar axvf $BINARY/$POTRACE_ARC || bail "Potrace not found!"
     fi
