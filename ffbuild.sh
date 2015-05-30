@@ -418,12 +418,26 @@ else
     cd "fontforge"
 fi
 
+# Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
+if [ ! -d gnulib ]; then
+    log_status "Cloning and patching gnulib..."
+    git clone git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
+fi
+
+git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
+if [ $? -eq 0 ]; then
+    log_status "Patching the gnulib..."
+    git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
+    rm fontforge.configure-complete configure
+    log_note "Patch applied."
+fi
+
 if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
     log_status "Running the configure script..."
     
     if [ ! -f configure ]; then
         log_note "No configure script detected; running ./boostrap..."
-        ./bootstrap || bail "FontForge autogen"
+        ./bootstrap --force || bail "FontForge autogen"
     fi
 
     # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)

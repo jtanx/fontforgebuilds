@@ -40,12 +40,99 @@ index 0721697..4c47061 100644
 +    AC_CHECK_FUNCS([gethostname])
 +  fi
    AC_SUBST([GETHOSTNAME_LIB])
- 
+
 -  if test "$ac_cv_func_gethostname" = no; then
 +  if test "x$ac_cv_func_gethostname" != "xyes"; then
      HAVE_GETHOSTNAME=0
    fi
- 
--- 
+
+--
+2.4.1
+
+
+From 7f8a88084ed648229be06493b245fc5ddf897481 Mon Sep 17 00:00:00 2001
+From: Jeremy Tan <jtanx@outlook.com>
+Date: Sat, 30 May 2015 10:08:48 +0800
+Subject: [PATCH] Enable Unicode support for open and fopen on Windows
+
+---
+ lib/fopen.c | 23 +++++++++++++++++++++++
+ lib/open.c  | 16 ++++++++++++++++
+ 2 files changed, 39 insertions(+)
+
+diff --git a/lib/fopen.c b/lib/fopen.c
+index 139ede2..f645cca 100644
+--- a/lib/fopen.c
++++ b/lib/fopen.c
+@@ -24,12 +24,35 @@
+
+ /* Get the original definition of fopen.  It might be defined as a macro.  */
+ #include <stdio.h>
++/* Get the character set conversion functions for Windows. */
++#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
++# include <limits.h>
++# include <Stringapiset.h>
++#endif
+ #undef __need_FILE
+
+ static FILE *
+ orig_fopen (const char *filename, const char *mode)
+ {
++#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
++# define MAX_MODE 20
++  wchar_t rpl_filename[MAX_PATH], rpl_mode[MAX_MODE];
++  if (MultiByteToWideChar (CP_UTF8, MB_ERR_INVALID_CHARS, filename, -1,
++                           rpl_filename, MAX_PATH) == 0)
++    {
++      errno = EINVAL;
++      return NULL;
++    }
++  if (MultiByteToWideChar (CP_UTF8, MB_ERR_INVALID_CHARS, mode, -1,
++                           rpl_mode, MAX_MODE) == 0)
++    {
++      errno = EINVAL;
++      return NULL;
++    }
++  return _wfopen (rpl_filename, rpl_mode);
++#else
+   return fopen (filename, mode);
++#endif
+ }
+
+ /* Specification.  */
+diff --git a/lib/open.c b/lib/open.c
+index 95c7811..b6198ba 100644
+--- a/lib/open.c
++++ b/lib/open.c
+@@ -25,12 +25,28 @@
+ /* Get the original definition of open.  It might be defined as a macro.  */
+ #include <fcntl.h>
+ #include <sys/types.h>
++/* Get the character set conversion functions for Windows. */
++#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
++# include <limits.h>
++# include <Stringapiset.h>
++#endif
+ #undef __need_system_fcntl_h
+
+ static int
+ orig_open (const char *filename, int flags, mode_t mode)
+ {
++#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
++  wchar_t rpl_filename[MAX_PATH];
++  if (MultiByteToWideChar (CP_UTF8, MB_ERR_INVALID_CHARS, filename, -1,
++                           rpl_filename, MAX_PATH) == 0)
++    {
++      errno = EINVAL;
++      return -1;
++    }
++  return _wopen (rpl_filename, flags, mode);
++#else
+   return open (filename, flags, mode);
++#endif
+ }
+
+ /* Specification.  */
+--
 2.4.1
 
