@@ -1,3 +1,11 @@
+30-05-15:
+* Patch Gnulib to make fopen and open assume UTF-8 filenames for opening files.
+  This allows files with non-ASCII/English filenames to be opened IFF a UTF-8
+  locale is used (see fontforge.bat)
+* Port the MetaFont import function to Windows
+* Fix autorecover 'forget' options (actually delete the files if a 'forget'
+  option is requested)
+* Fix saving hotkeys
 26-05-15:
 * Using GLib for Unicode file browsing (opening fix TBA)
 24-05-15:

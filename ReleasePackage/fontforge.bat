@@ -8,6 +8,9 @@ set AUTOTRACE=potrace
 set HOME=%FF%
 set FF_PORTABLE=TRUE
 
+::Set this item to enable experimental Unicode filename support
+set LC_ALL=C.UTF-8
+
 ::Set this to your language code to change the FontForge UI language
 ::See share/locale/ for a list of supported language codes
 ::set LANGUAGE=en

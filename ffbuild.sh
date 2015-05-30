@@ -156,7 +156,7 @@ if [ ! -f $PMTEST ]; then
     pacman $IOPTS $PMPREFIX-$PYINST $PMPREFIX-openssl # libxslt docbook-xml docbook-xsl
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gmp
+    pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gmp $PMPREFIX-ntldd-git
     pacman $IOPTS $PMPREFIX-gettext $PMPREFIX-libiconv $PMPREFIX-libtool
 
     log_status "Installing precompiled devel libraries..."
@@ -467,22 +467,21 @@ fi
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
 log_note "The executable: $ffex"
-fflibs=`ldd "$ffex" \
+
+MSYS2ROOT=`cygpath -w /`
+fflibs=`ntldd -D "$TARGET/bin" -R "$ffex" \
 | grep dll \
 | sed -e '/^[^\t]/ d'  \
 | sed -e 's/\t//'  \
 | sed -e 's/.*=..//'  \
-| sed -e 's/ (0.*)//'  \
-| sed -e '/^\/c/d' \
-| sort  \
-| uniq \
+| sed -e 's/ (0.*)//' \
+| grep -F "$MSYS2ROOT"
 `
 
 log_status "Copying the FontForge executable..."
 strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
 objcopy --only-keep-debug "$ffex" "$DBSYMBOLS/fontforge.debug"
 objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge.exe"
-#cp "$ffex" "$RELEASE/bin/"
 log_status "Copying the libraries required by FontForge..."
 for f in $fflibs; do
     filename="$(basename $f)"
