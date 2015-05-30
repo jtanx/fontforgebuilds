@@ -1,23 +1,39 @@
 #include <windows.h>
+#include <Strsafe.h>
 
-int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int nCmdShow) { 
-  // Define Variables
-  char szAppPath[MAX_PATH] = "";
-  char szAppDirectory[MAX_PATH] = "";
-  char szBatPath[MAX_PATH] = "";
+int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, PWSTR lpCmdLine, int nCmdShow) { 
+	// Define Variables
+	wchar_t wszAppPath[MAX_PATH];
+	wchar_t wszBatPath[MAX_PATH];
+	wchar_t *pwszTail;
+	DWORD dwRet;
   
-  // Get path of executable
-  GetModuleFileName(NULL, szAppPath, MAX_PATH);
+	// Get path of executable
+	dwRet = GetModuleFileName(NULL, wszAppPath, MAX_PATH);
+	if (dwRet == 0 || dwRet >= MAX_PATH) {
+		MessageBox(NULL, L"Path too long - place FontForge in another directory.",
+			NULL, MB_OK | MB_ICONEXCLAMATION);
+		return 1;
+	} else if ((pwszTail = wcsrchr(wszAppPath, L'\\')) == NULL) {
+		MessageBox(NULL, L"Could not determine executable location.",
+			NULL, MB_OK | MB_ICONEXCLAMATION);
+		return 1;
+	}
+	
+	//Construct the file location
+	*pwszTail = L'\0';
+	dwRet = StringCchPrintf(wszBatPath, MAX_PATH, L"%s\\fontforge.bat", wszAppPath);
+	if (FAILED(dwRet)) {
+		MessageBox(NULL, L"Could not determine executable location.",
+			NULL, MB_OK | MB_ICONEXCLAMATION);
+		return 1;
+	}
   
-  // Extract directory
-  strncpy(szAppDirectory, szAppPath, (int)(strrchr(szAppPath, (int) '\\') - szAppPath));
-  szAppDirectory[strlen(szAppDirectory)] = '\0';
-  
-  // Append batch file to directory
-  strcpy(szBatPath, szAppDirectory);
-  strcat(szBatPath, "\\fontforge.bat");
-  
-  // Run batch file without visible window
-  ShellExecute(HWND_DESKTOP, "open", szBatPath, lpCmdLine, NULL, SW_HIDE);
-  return 0;
-} 
+	// Run batch file without visible window
+	dwRet = (int)ShellExecute(HWND_DESKTOP, L"open", wszBatPath, lpCmdLine, NULL, SW_HIDE);
+	if (dwRet < 32) {
+		MessageBox(NULL, L"Could not launch FontForge.", NULL, MB_OK | MB_ICONEXCLAMATION);
+		return 1;
+	}
+	return 0;
+}

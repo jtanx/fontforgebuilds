@@ -385,7 +385,7 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
     mkdir -p run_fontforge
     cd run_fontforge
     windres "$PATCH/run_fontforge.rc" -O coff -o run_fontforge.res
-    gcc -Wall -O2 -mwindows -o run_fontforge.exe "$PATCH/run_fontforge.c" run_fontforge.res \
+    gcc -Wall -Werror -pedantic -std=c99 -O2 -mwindows -municode -o run_fontforge.exe "$PATCH/run_fontforge.c" run_fontforge.res \
     || bail "run_fontforge"
     touch run_fontforge.complete
     cd ..
