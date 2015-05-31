@@ -77,7 +77,6 @@ DBSYMBOLS=$BASE/debugging-symbols/.debug/
 if [ "$MSYSTEM" = "MINGW32" ]; then
     log_note "Building 32-bit version!"
 
-    ARCH="32-bit"
     ARCHNUM="32"
     MINGVER=mingw32
     MINGOTHER=mingw64
@@ -89,8 +88,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     POTRACE_DIR="potrace-1.12.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
-
-    ARCH="64-bit"
+    
     ARCHNUM="64"
     MINGVER=mingw64
     MINGOTHER=mingw32
@@ -592,7 +590,7 @@ actual_branch=`git -C $WORK/fontforge rev-parse --abbrev-ref HEAD`
 actual_hash=`git -C $WORK/fontforge rev-parse HEAD`
 version_hash=`git -C $WORK/fontforge rev-parse master`
 current_date=`date "+%c %z"`
-printf "FontForge Windows build ($ARCH)\r\n$current_date\r\n$actual_hash [$actual_branch]\r\nBased on master: $version_hash\r\n\r\n" > $RELEASE/VERSION.txt
+printf "FontForge Windows build ($ARCHNUM-bit)\r\n$current_date\r\n$actual_hash [$actual_branch]\r\nBased on master: $version_hash\r\n\r\n" > $RELEASE/VERSION.txt
 printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
 cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
 
@@ -600,18 +598,3 @@ cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
 #sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
 
 log_note "Build complete."
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

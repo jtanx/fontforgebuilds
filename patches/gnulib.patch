@@ -50,21 +50,21 @@ index 0721697..4c47061 100644
 2.4.1
 
 
-From 3b108ca5f725889258bfe05681cb3911007d3207 Mon Sep 17 00:00:00 2001
+From f9c85a5272cc50f9cac88e581864829c6cbeba3f Mon Sep 17 00:00:00 2001
 From: Jeremy Tan <jtanx@outlook.com>
 Date: Sat, 30 May 2015 10:08:48 +0800
 Subject: [PATCH] Enable Unicode support for open and fopen on Windows
 
 ---
- lib/fopen.c | 25 ++++++++++++++++++++++++-
+ lib/fopen.c | 42 +++++++++++++++++++++++++++++++++++++++++-
  lib/open.c  | 18 +++++++++++++++++-
- 2 files changed, 41 insertions(+), 2 deletions(-)
+ 2 files changed, 58 insertions(+), 2 deletions(-)
 
 diff --git a/lib/fopen.c b/lib/fopen.c
-index 139ede2..e8eb7c6 100644
+index 139ede2..f8c7757 100644
 --- a/lib/fopen.c
 +++ b/lib/fopen.c
-@@ -24,12 +24,36 @@
+@@ -24,12 +24,53 @@
  
  /* Get the original definition of fopen.  It might be defined as a macro.  */
  #include <stdio.h>
@@ -82,6 +82,8 @@ index 139ede2..e8eb7c6 100644
 +#if (defined _WIN32 || defined __WIN32__) && ! defined __CYGWIN__
 +# define MAX_MODE 20
 +  wchar_t rpl_filename[MAX_PATH], rpl_mode[MAX_MODE];
++  size_t i;
++
 +  if (MultiByteToWideChar (CP_UTF8, MB_ERR_INVALID_CHARS, filename, -1,
 +                           rpl_filename, MAX_PATH) == 0)
 +    {
@@ -94,6 +96,21 @@ index 139ede2..e8eb7c6 100644
 +      errno = EINVAL;
 +      return NULL;
 +    }
++  for (i = 0; rpl_mode[i] && rpl_mode[i] != L'b'; i++);
++
++  if (rpl_mode[i] == L'\0')
++    {
++      if (i+1 < MAX_MODE)
++        {
++          rpl_mode[i++] = L'b';
++          rpl_mode[i] = L'\0';
++        }
++      else
++        {
++          errno = EINVAL;
++          return NULL;
++        }
++    }
 +  return _wfopen (rpl_filename, rpl_mode);
 +#else
    return fopen (filename, mode);
@@ -101,7 +118,7 @@ index 139ede2..e8eb7c6 100644
  }
  
  /* Specification.  */
-@@ -37,7 +61,6 @@ orig_fopen (const char *filename, const char *mode)
+@@ -37,7 +78,6 @@ orig_fopen (const char *filename, const char *mode)
     this include because of the preliminary #include <stdio.h> above.  */
  #include "stdio.h"
  
@@ -110,7 +127,7 @@ index 139ede2..e8eb7c6 100644
  #include <string.h>
  #include <unistd.h>
 diff --git a/lib/open.c b/lib/open.c
-index 95c7811..979a059 100644
+index 95c7811..4390678 100644
 --- a/lib/open.c
 +++ b/lib/open.c
 @@ -24,13 +24,30 @@
@@ -137,7 +154,7 @@ index 95c7811..979a059 100644
 +      errno = EINVAL;
 +      return -1;
 +    }
-+  return _wopen (rpl_filename, flags, mode);
++  return _wopen (rpl_filename, flags, mode|_O_BINARY);
 +#else
    return open (filename, flags, mode);
 +#endif
