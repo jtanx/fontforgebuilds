@@ -372,7 +372,7 @@ if [ ! -f VcXsrv_util/VcXsrv_util.complete ]; then
     log_status "Building VcXsrv_util..."
     mkdir -p VcXsrv_util
     cd VcXsrv_util
-    gcc -Wall -O2 -municode \
+    gcc -Wall -Werror -pedantic -std=c99 -O2 -municode -shared-libgcc \
         -o VcXsrv_util.exe "$PATCH/VcXsrv_util.c" \
     || bail "VcXsrv_util"
     touch VcXsrv_util.complete
