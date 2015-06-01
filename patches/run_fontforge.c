@@ -4,9 +4,30 @@
 int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, PWSTR lpCmdLine, int nCmdShow) { 
 	// Define Variables
 	wchar_t wszAppPath[MAX_PATH];
-	wchar_t wszBatPath[MAX_PATH];
+	wchar_t wszCmdPath[MAX_PATH];
+	wchar_t wszCmdArgs[8192];
 	wchar_t *pwszTail;
+	PROCESS_INFORMATION pi;
+	STARTUPINFO si = { 0 };
 	DWORD dwRet;
+
+	si.cb = sizeof(STARTUPINFO);
+	si.dwFlags = STARTF_USESHOWWINDOW;
+	si.wShowWindow = SW_HIDE;
+
+	//Get the path to cmd.exe
+	dwRet = GetSystemDirectory(wszAppPath, MAX_PATH);
+	if (dwRet == 0 || dwRet >= MAX_PATH) {
+		MessageBox(NULL, L"Path too long - could not determine system directory.",
+			NULL, MB_OK | MB_ICONEXCLAMATION);
+		return 1;
+	}
+	dwRet = StringCchPrintf(wszCmdPath, MAX_PATH, L"%s\\cmd.exe", wszAppPath);
+	if (FAILED(dwRet)) {
+		MessageBox(NULL, L"Path too long - could not get path to command line interpreter (cmd.exe).",
+			NULL, MB_OK | MB_ICONEXCLAMATION);
+		return 1;
+	}
   
 	// Get path of executable
 	dwRet = GetModuleFileName(NULL, wszAppPath, MAX_PATH);
@@ -19,21 +40,30 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, PWSTR lpCmdLine, int nCmdS
 			NULL, MB_OK | MB_ICONEXCLAMATION);
 		return 1;
 	}
-	
-	//Construct the file location
+
+	//Construct the parameters to pass to cmd.exe
 	*pwszTail = L'\0';
-	dwRet = StringCchPrintf(wszBatPath, MAX_PATH, L"%s\\fontforge.bat", wszAppPath);
+	dwRet = StringCchPrintf(wszCmdArgs, sizeof(wszCmdArgs), L"/c \"\"%s\\fontforge.bat\" %s\"",
+		wszAppPath, lpCmdLine);
 	if (FAILED(dwRet)) {
-		MessageBox(NULL, L"Could not determine executable location.",
+		MessageBox(NULL, L"Command parameter is too long.",
 			NULL, MB_OK | MB_ICONEXCLAMATION);
 		return 1;
 	}
   
 	// Run batch file without visible window
-	dwRet = (int)ShellExecute(HWND_DESKTOP, L"open", wszBatPath, lpCmdLine, NULL, SW_HIDE);
-	if (dwRet < 32) {
+	dwRet = CreateProcess(wszCmdPath, wszCmdArgs, NULL, NULL, FALSE,
+		CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+	if (dwRet == 0) {
 		MessageBox(NULL, L"Could not launch FontForge.", NULL, MB_OK | MB_ICONEXCLAMATION);
 		return 1;
 	}
-	return 0;
+
+	//Wait for the process to end and get the exit code
+	WaitForSingleObject(pi.hProcess, INFINITE);
+	GetExitCodeProcess(pi.hProcess, &dwRet);
+	CloseHandle(pi.hProcess);
+	CloseHandle(pi.hThread);
+
+	return dwRet;
 }
