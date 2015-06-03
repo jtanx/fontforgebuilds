@@ -1,0 +1,8 @@
+Debug/
+Release/
+run_fontforge/Debug/
+run_fontforge/Release/
+*.opensdf
+*.sdf
+*.suo
+*.user

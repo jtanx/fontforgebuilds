@@ -60,10 +60,19 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, PWSTR lpCmdLine, int nCmdS
 	}
 
 	//Wait for the process to end and get the exit code
-	WaitForSingleObject(pi.hProcess, INFINITE);
-	GetExitCodeProcess(pi.hProcess, &dwRet);
+	dwRet = WaitForSingleObject(pi.hProcess, 10000);
+	if (dwRet == WAIT_OBJECT_0) {
+		GetExitCodeProcess(pi.hProcess, &dwRet);
+		if (dwRet != 0) {
+			wchar_t buf[100];
+			StringCchPrintf(buf, 100, L"Could not launch FontForge (exit code %d).", (int)dwRet);
+			MessageBox(NULL, buf, NULL, MB_OK | MB_ICONEXCLAMATION);
+		}
+	} else {
+		dwRet = 0;
+	}
+
 	CloseHandle(pi.hProcess);
 	CloseHandle(pi.hThread);
-
 	return dwRet;
 }
