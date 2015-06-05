@@ -534,7 +534,7 @@ log_status "Installing VcXsrv_util..."
 strip $WORK/VcXsrv_util/VcXsrv_util.exe -so "$RELEASE/bin/VcxSrv_util.exe" \
     || bail "VcxSrv_util"
 log_status "Installing run_fontforge..."
-strip $WORK/run_fontforge/run_fontforge.exe -so "$RELEASE/run_fontforge.exe" \
+objcopy -S --file-alignment 1024 $WORK/run_fontforge/run_fontforge.exe "$RELEASE/run_fontforge.exe" \
     || bail "run_fontforge"
 
 log_status "Copying UI fonts..."
