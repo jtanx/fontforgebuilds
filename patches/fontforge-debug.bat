@@ -21,13 +21,16 @@ set "PATH=%FF%;%FF%\bin;%PATH:"=%"
 set FF_PATH_ADDED=TRUE
 )
 
+echo Running FontForge in debug mode, expect it to be slower!
+
 "%FF%\bin\VcXsrv_util.exe" -exists || (
 start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :%FF_XPORT% -multiwindow -clipboard -silent-dup-error
 )
 
 "%FF%\bin\VcXsrv_util.exe" -wait
 
-"%FF%\bin\fontforge.exe" -nosplash %*
+"%FF%\bin\gdb.exe" --batch --command="%FF%\ffdebugscript.txt" --args "%FF%\bin\fontforge.exe" -nosplash %* 2>&1 | wtee "%TEMP%\FontForge-Debug-Output.txt"
+explorer "%TEMP%\FontForge-Debug-Output.txt"
 
 "%FF%\bin\VcXsrv_util.exe" -close
 :: bye

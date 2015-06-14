@@ -1,3 +1,12 @@
+14-06-15 (r3):
+* Fix another bug in Unicode filename handling (#2364)
+14-06-15:
+* Fix bug in Window titles not being displayed properly
+13-06-15:
+* Sync with the June 20150612 release
+* Fix clipboard pasting to/from FontForge
+* Patching FontForge to work with filenames regardless of current locale
+  (still somewhat experimental)
 30-05-15:
 * Patch Gnulib to make fopen and open assume UTF-8 filenames for opening files.
   This allows files with non-ASCII/English filenames to be opened IFF a UTF-8

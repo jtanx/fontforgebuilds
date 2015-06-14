@@ -1,11 +1,11 @@
 @ECHO OFF
-set FF=%~dp0
+set "FF=%~dp0"
 set FF_XPORT=11
 set DISPLAY=127.0.0.1:%FF_XPORT%.0
-set XLOCALEDIR=%FF%\bin\VcXsrv\locale
-set XLOCALELIBDIR=%XLOCALEDIR%
+set "XLOCALEDIR=%FF%bin\VcXsrv\locale"
+set "XLOCALELIBDIR=%XLOCALEDIR%"
 set AUTOTRACE=potrace
-set HOME=%FF%
+set "HOME=%FF%"
 ::set FF_PORTABLE=TRUE
 
 ::Set this item to enable experimental Unicode filename support

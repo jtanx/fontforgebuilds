@@ -9,6 +9,8 @@ ReleasePackage/bin/*
 ReleasePackage/lib/
 ReleasePackage/share/
 ReleasePackage/VERSION.txt
+ReleasePackage/ffdebugscript.txt
+ReleasePackage/fontforge-debug.bat
 fontforge-setup/*.exe
 ui-fonts/*
 

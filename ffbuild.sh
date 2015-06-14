@@ -2,11 +2,13 @@
 # FontForge build script.
 # Uses MSYS2/MinGW-w64
 # Author: Jeremy Tan
-# Usage: ffbuild.sh [--reconfigure|--nomake --noconfirm]
+# Usage: ffbuild.sh [--reconfigure|--nomake|--makedebug --yes]
 # --reconfigure     Forces the configure script to be rerun for the currently
 #                   worked-on package.
 # --nomake          Don't make/make install FontForge but do everything else
-# --noconfirm       Don't confirm when switching between the build architecture.
+# --yes       Don't confirm when switching between the build architecture.
+# --makedebug       Adds in debugging utilities into the build (gdb and
+#                   automation script
 #
 # This script retrieves and installs all libraries required to build FontForge.
 # It then attempts to compile the latest version of FontForge, and to
@@ -593,6 +595,15 @@ current_date=`date "+%c %z"`
 printf "FontForge Windows build ($ARCHNUM-bit)\r\n$current_date\r\n$actual_hash [$actual_branch]\r\nBased on master: $version_hash\r\n\r\n" > $RELEASE/VERSION.txt
 printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
 cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
+
+if [ "$opt1" == "--makedebug" ] || [ "$opt2" == "--makedebug" ]; then
+    log_note "Adding in debugging utilities..."
+    cp -f "$PATCH/ffdebugscript.txt" "$RELEASE/" || bail "Couldn't copy debug script"
+    cp -f "$PATCH/fontforge-debug.bat" "$RELEASE/" || bail "Couldn't copy fontforge-debug.bat"
+    cp -f "$BINARY/gdb-$ARCHNUM.exe" "$RELEASE/bin/gdb.exe" || bail "Couldn't copy GDB"
+    cp -f "$BINARY/wtee.exe" "$RELEASE/bin/" || bail "Couldn't copy wtee"
+    cp -rf "$DBSYMBOLS" "$RELEASE/bin/" || bail "Couldn't copy debugging symbols"
+fi
 
 # Might as well auto-generate everything
 #sed -bi "s/^git .*$/git $version_hash ($current_date).\r/g" $RELEASE/VERSION.txt
