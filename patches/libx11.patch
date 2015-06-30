@@ -126,6 +126,19 @@ index 9d4e462..69523cc 100644
  	*len = ret_len;
  	break;
  
+diff --git a/src/KeysymStr.c b/src/KeysymStr.c
+index c7c4704..d336559 100644
+--- a/src/KeysymStr.c
++++ b/src/KeysymStr.c
+@@ -107,7 +107,7 @@ char *XKeysymToString(KeySym ks)
+ 	XrmQuark empty = NULLQUARK;
+ 	GRNData data;
+ 
+-	snprintf(buf, sizeof(buf), "%lX", ks);
++	snprintf(buf, sizeof(buf), "%" PRIXPTR, (uintptr_t)ks);
+ 	resval.addr = (XPointer)buf;
+ 	resval.size = strlen(buf) + 1;
+ 	data.name = (char *)NULL;
 diff --git a/src/ParseCmd.c b/src/ParseCmd.c
 index 6771908..182d857 100644
 --- a/src/ParseCmd.c
@@ -269,6 +282,44 @@ index 9f4fe06..448b699 100644
  static DWORD _X_TlsIndex = (DWORD)-1;
  
  void _Xthread_init(void)
+diff --git a/src/util/makekeys.c b/src/util/makekeys.c
+index 5613e42..12d763d 100644
+--- a/src/util/makekeys.c
++++ b/src/util/makekeys.c
+@@ -62,7 +62,7 @@ parse_line(const char *buf, char *key, KeySym *val, char *prefix)
+ 
+     /* See if we can catch a straight XK_foo 0x1234-style definition first;
+      * the trickery around tmp is to account for prefices. */
+-    i = sscanf(buf, "#define %127s 0x%lx", key, val);
++    i = sscanf(buf, "#define %127s 0x%" PRIxPTR, key, (uintptr_t*)val);
+     if (i == 2 && (tmp = strstr(key, "XK_"))) {
+         memcpy(prefix, key, tmp - key);
+         prefix[tmp - key] = '\0';
+@@ -127,8 +127,8 @@ main(int argc, char *argv[])
+             if (val == XK_VoidSymbol)
+                 val = 0;
+             if (val > 0x1fffffff) {
+-                fprintf(stderr, "ignoring illegal keysym (%s, %lx)\n", key,
+-                        val);
++                fprintf(stderr, "ignoring illegal keysym (%s, %" PRIxPTR ")\n", key,
++                        (uintptr_t)val);
+                 continue;
+             }
+ 
+@@ -213,10 +213,10 @@ next1:	;
+ 	offsets[j] = k;
+ 	indexes[i] = k;
+ 	val = info[i].val;
+-	printf("0x%.2"PRIx32", 0x%.2"PRIx32", 0x%.2lx, 0x%.2lx, 0x%.2lx, 0x%.2lx, ",
++	printf("0x%.2" PRIx32 ", 0x%.2" PRIx32 ", 0x%.2" PRIxPTR ", 0x%.2" PRIxPTR ", 0x%.2" PRIxPTR ", 0x%.2" PRIxPTR ", ",
+ 	       (sig >> 8) & 0xff, sig & 0xff,
+-	       (val >> 24) & 0xff, (val >> 16) & 0xff,
+-	       (val >> 8) & 0xff, val & 0xff);
++	       (uintptr_t)((val >> 24) & 0xff), (uintptr_t)((val >> 16) & 0xff),
++	       (uintptr_t)((val >> 8) & 0xff), (uintptr_t)(val & 0xff));
+ 	for (name = info[i].name, k += 7; (c = *name++); k++)
+ 	    printf("'%c',", c);
+ 	printf((i == (ksnum-1)) ? "0\n" : "0,\n");
 diff --git a/src/xlibi18n/IMWrap.c b/src/xlibi18n/IMWrap.c
 index a7c1d98..ec94a7c 100644
 --- a/src/xlibi18n/IMWrap.c
@@ -291,10 +342,10 @@ index a7c1d98..ec94a7c 100644
  	    else if (size == sizeof(XPointer)) *dst = (XPointer)u.ptr;
  	    else memcpy( (char*)dst, (char*)src, (int)size );
 diff --git a/src/xlibi18n/XDefaultIMIF.c b/src/xlibi18n/XDefaultIMIF.c
-index db0f5d1..cb21c52 100644
+index 2eb52ae..624e544 100644
 --- a/src/xlibi18n/XDefaultIMIF.c
 +++ b/src/xlibi18n/XDefaultIMIF.c
-@@ -295,7 +295,7 @@ _SetICValueData(XIC ic, XIMArg *values, XICOp_t mode)
+@@ -293,7 +293,7 @@ _SetICValueData(XIC ic, XIMArg *values, XICOp_t mode)
      for (p = values; p != NULL && p->name != NULL; p++) {
  	if(strcmp(p->name, XNInputStyle) == 0) {
  	    if (mode == CREATE_IC)
@@ -304,10 +355,10 @@ index db0f5d1..cb21c52 100644
  	    ic->core.client_window = (Window)p->value ;
  	} else if (strcmp(p->name, XNFocusWindow) == 0) {
 diff --git a/src/xlibi18n/lcWrap.c b/src/xlibi18n/lcWrap.c
-index 034bd3c..3f65f0d 100644
+index 3824260..fa9b139 100644
 --- a/src/xlibi18n/lcWrap.c
 +++ b/src/xlibi18n/lcWrap.c
-@@ -503,15 +503,15 @@ _XlcCopyFromArg(
+@@ -502,15 +502,15 @@ _XlcCopyFromArg(
      int size)
  {
      if (size == sizeof(long))
