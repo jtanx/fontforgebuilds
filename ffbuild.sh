@@ -310,7 +310,6 @@ xcb=X.Org/xcb
 install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "" "x11proto.patch"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/bigreqsproto" "bigreqsproto"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto"
 install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto"
