@@ -1,22 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 # FontForge build script.
 # Uses MSYS2/MinGW-w64
 # Author: Jeremy Tan
-# Usage: ffbuild.sh [--reconfigure|--nomake|--makedebug --yes]
-# --reconfigure     Forces the configure script to be rerun for the currently
-#                   worked-on package.
-# --nomake          Don't make/make install FontForge but do everything else
-# --yes       Don't confirm when switching between the build architecture.
-# --makedebug       Adds in debugging utilities into the build (gdb and
-#                   automation script
-#
 # This script retrieves and installs all libraries required to build FontForge.
 # It then attempts to compile the latest version of FontForge, and to
 # subsequently make a redistributable package.
 
-# Retrieve input arguments to script
-opt1="$1"
-opt2="$2"
+reconfigure=0
+nomake=0
+yes=0
+makedebug=0
+depsfromscratch=0
+precompiled_pango_cairo=0
+
+function dohelp() {
+    echo "Usage: `basename $0` [options]"
+    echo "  -h, --help         Prints this help message"
+    echo "  -r, --reconfigure  Forces the configure script to be rerun for the currently"
+    echo "                     worked-on package."
+    echo "  -n, --nomake       Don't make/make install FontForge but do everything else"
+    echo "  -y, --yes          Say yes to all build script prompts"
+    echo "  -d, --makedebug    Adds in debugging utilities into the build (adds a gdb"
+    echo "                     automation script)"
+    echo "  -s, --depsfromscratch Builds all X11 libraries, libspiro and libuninameslist"
+    echo "                        from source. Useful only for debugging these libraries."
+    echo "  -p, --precompiled-pango-cairo Use the precompiled versions of Pango and"
+    echo "                                Cairo that have X11 support. Not recommended"
+    echo "                                unless you use MSYS2 only for building"
+    echo "                                FontForge and nothing else."
+    
+    exit $1
+}
 
 # Colourful text
 # Red text
@@ -44,7 +58,7 @@ function detect_arch_switch () {
     local to=".building-$2"
 
     if [ -f "$from" ]; then
-        if [ "$opt2" = "--yes" ]; then
+        if (($yes)); then
             git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
         else
             read -p "Architecture change detected! ReleasePackage must be reset. Continue? [y/N]: " arch_confirm
@@ -65,6 +79,50 @@ function detect_arch_switch () {
 
 # Preamble
 log_note "MSYS2 FontForge build script..."
+
+# Retrieve input arguments to script
+optspec=":hrnydsp-:"
+while getopts "$optspec" optchar; do
+    case "${optchar}" in
+        -)
+            case "${OPTARG}" in
+                reconfigure)
+                    reconfigure=$((1-reconfigure)) ;;
+                nomake)
+                    nomake=$((1-nomake)) ;;
+                makedebug)
+                    makedebug=$((1-makedebug)) ;;
+                depsfromscratch)
+                    depsfromscratch=$((1-depsfromscratch)) ;;
+                precompiled-pango-cairo)
+                    precompiled_pango_cairo=$((1-precompiled_pango_cairo)) ;;
+                yes)
+                    yes=$((1-yes)) ;;
+                help)
+                    dohelp 0;;
+                *)
+                    log_error "Unknown option --${OPTARG}"
+                    dohelp 1 ;;
+            esac;;
+        r)
+            reconfigure=$((1-reconfigure)) ;;
+        n)
+            nomake=$((1-nomake)) ;;
+        d)
+            makedebug=$((1-makedebug)) ;;
+        s)
+            depsfromscratch=$((1-depsfromscratch)) ;;
+        p)
+            precompiled_pango_cairo=$((1-precompiled_pango_cairo)) ;;
+        y)
+            yes=$((1-yes)) ;;
+        h)
+            dohelp 0 ;;
+        *)
+            log_error "Unknown argument -${OPTARG}"
+            dohelp 1 ;;
+    esac
+done
 
 # Set working folders
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -142,7 +200,15 @@ export LIBS=""
 # Install all the available precompiled binaries
 if [ ! -f $PMTEST ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
-
+    if (( ! $depsfromscratch )) || (($precompiled_pango_cairo)); then
+        if ! grep -q fontforgelibs /etc/pacman.conf; then
+            log_note "Adding the fontforgelibs repo..."
+            echo -ne "\n[fontforgelibs32]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
+            echo -ne "[fontforgelibs64]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
+            pacman-key -r 2E618C78
+            pacman-key --lsign-key 2E618C78
+        fi
+    fi
     pacman -Sy --noconfirm
 
     IOPTS="-S --noconfirm --needed"
@@ -153,11 +219,28 @@ if [ ! -f $PMTEST ]; then
     pacman $IOPTS automake autoconf pkg-config
 
     ## Other libs
-    pacman $IOPTS $PMPREFIX-$PYINST $PMPREFIX-openssl # libxslt docbook-xml docbook-xsl
+    pacman $IOPTS $PMPREFIX-$PYINST $PMPREFIX-openssl
 
     # Install MinGW related stuff
     pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gmp $PMPREFIX-ntldd-git
     pacman $IOPTS $PMPREFIX-gettext $PMPREFIX-libiconv $PMPREFIX-libtool
+    
+    if (($precompiled_pango_cairo)); then
+        log_note "Installing precompiled Pango and Cairo libraries..."
+        pacman $IOPTS --force $PMPREFIX-cairo-x11 $PMPREFIX-pango-x11 || \
+        bail "Install Pango/Cairo dependencies manually"
+    else
+        log_note "Installing vanilla Pango and Cairo libraries..."
+        pacman $IOPTS $PMPREFIX-cairo $PMPREFIX-pango || \
+        bail "Install Pango/Cairo dependencies manually"
+    fi
+    
+    if (( ! $depsfromscratch )); then
+        log_note "Installing precompiled X11, libspiro and libuninameslist libs..."
+        pacman $IOPTS --force $PMPREFIX-libx11-git $PMPREFIX-libxext-git
+        pacman $IOPTS $PMPREFIX-libxrender-git $PMPREFIX-libxft-git
+        pacman $IOPTS $PMPREFIX-libspiro-git $PMPREFIX-libuninameslist-git
+    fi
 
     log_status "Installing precompiled devel libraries..."
 
@@ -219,7 +302,7 @@ function install_source_patch () {
             touch "$folder.configgen-complete"
         fi
 
-        if [ ! -f "$folder.configure-complete" ] || [ "$opt1" = "--reconfigure" ]; then
+        if [ ! -f "$folder.configure-complete" ] || (($reconfigure)); then
             log_status "Running the configure script..."
             ./configure $HOST $configflags || bail "$folder"
             touch "$folder.configure-complete"
@@ -296,69 +379,71 @@ function install_git_source () {
 
 }
 
-log_status "Installing custom libraries..."
-install_git_source "http://github.com/fontforge/libspiro" "libspiro" "autoreconf -i && automake --foreign -Wall"
-install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "autoreconf -i && automake --foreign"
+if (($depsfromscratch)); then
+    log_status "Installing custom libraries..."
+    install_git_source "http://github.com/fontforge/libspiro" "libspiro" "autoreconf -i && automake --foreign -Wall"
+    install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "autoreconf -i && automake --foreign"
 
-# X11 libraries
-log_status "Installing X11 libraries..."
+    # X11 libraries
+    log_status "Installing X11 libraries..."
 
-xproto=X.Org/proto
-xlib=X.Org/lib
-xcb=X.Org/xcb
+    install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros"
+    install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "" "x11proto.patch"
+    install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto"
+    install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto"
+    install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto"
+    install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto"
+    install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto"
+    install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto"
 
-install_git_source "git://anongit.freedesktop.org/xorg/util/macros" "util-macros"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/x11proto" "x11proto" "" "x11proto.patch"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/renderproto" "renderproto"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/kbproto" "kbproto"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/inputproto" "inputproto"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/xextproto" "xextproto"
-install_git_source "git://anongit.freedesktop.org/xorg/proto/xf86bigfontproto" "xf86bigfontproto"
-install_git_source "git://anongit.freedesktop.org/xcb/proto" "xcb-proto"
-
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "" "libxtrans.patch"
-LIBS="-lws2_32" install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "" "libxcb.patch" \
-"
---disable-composite
---disable-damage
---disable-dpms
---disable-dri2
---disable-dri3
---disable-glx
---disable-present
---disable-randr
---disable-record
---disable-resource
---disable-screensaver
---disable-shape
---disable-shm
---disable-sync
---disable-xevie
---disable-xfixes
---disable-xfree86-dri
---disable-xinerama
---disable-xinput
---disable-xprint
---disable-selinux
---disable-xkb
---disable-xtest
---disable-xv
---disable-xvmc
-"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "" "libx11.patch"  "--disable-ipv6 --enable-xlocaledir"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" "" "libxext.patch"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender"
-install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "libXft.patch"
+    install_git_source "git://anongit.freedesktop.org/xorg/lib/libXau" "libXau"
+    install_git_source "git://anongit.freedesktop.org/xorg/lib/libxtrans" "libxtrans" "" "libxtrans.patch"
+    LIBS="-lws2_32" install_git_source "git://anongit.freedesktop.org/xcb/libxcb" "libxcb" "" "libxcb.patch" \
+    "
+    --disable-composite
+    --disable-damage
+    --disable-dpms
+    --disable-dri2
+    --disable-dri3
+    --disable-glx
+    --disable-present
+    --disable-randr
+    --disable-record
+    --disable-resource
+    --disable-screensaver
+    --disable-shape
+    --disable-shm
+    --disable-sync
+    --disable-xevie
+    --disable-xfixes
+    --disable-xfree86-dri
+    --disable-xinerama
+    --disable-xinput
+    --disable-xprint
+    --disable-selinux
+    --disable-xkb
+    --disable-xtest
+    --disable-xv
+    --disable-xvmc
+    "
+    install_git_source "git://anongit.freedesktop.org/xorg/lib/libX11" "libX11" "" "libx11.patch"  "--disable-ipv6 --enable-xlocaledir"
+    install_git_source "git://anongit.freedesktop.org/xorg/lib/libXext" "libXext" "" "libxext.patch"
+    install_git_source "git://anongit.freedesktop.org/xorg/lib/libXrender" "libXrender"
+    install_git_source "git://anongit.freedesktop.org/xorg/lib/libXft" "libXft" "" "libXft.patch"
+fi
 
 #While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
-log_status "Installing Cairo..."
-#Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
-install_source_patch cairo-1.14.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
+if (( ! $precompiled_pango_cairo )); then
+    log_status "Installing Cairo..."
+    #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
+    install_source_patch cairo-1.14.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
 
-# Download from http://ftp.gnome.org/pub/gnome/sources/pango
-log_status "Installing Pango..."
-install_source pango-1.37.0.tar.xz "" "--with-xft --with-cairo"
+    # Download from http://ftp.gnome.org/pub/gnome/sources/pango
+    log_status "Installing Pango..."
+    install_source pango-1.37.0.tar.xz "" "--with-xft --with-cairo"
+fi
+
+cd $WORK
 
 # ZMQ does not work for now
 #install_git_source "https://github.com/jedisct1/libsodium" "libsodium" "libtoolize -i && ./autogen.sh"
@@ -380,7 +465,7 @@ fi
 
 # run_fontforge
 if [ ! -f run_fontforge/run_fontforge.complete ]; then
-    log_status "Installing run_fontforge..."
+    log_status "Building run_fontforge..."
     mkdir -p run_fontforge
     cd run_fontforge
     windres "$PATCH/run_fontforge.rc" -O coff -o run_fontforge.res
@@ -397,7 +482,6 @@ if [ ! -d freetype-2.5.5 ]; then
 fi
 
 log_status "Finished installing prerequisites, attempting to install FontForge!"
-cd $WORK
 
 # fontforge
 if [ ! -d fontforge ]; then
@@ -420,7 +504,7 @@ fi
 # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
 if [ ! -d gnulib ]; then
     log_status "Cloning gnulib..."
-    git clone git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
+    git clone --depth 50 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
 fi
 
 git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
@@ -431,7 +515,7 @@ if [ $? -eq 0 ]; then
     log_note "Patch applied."
 fi
 
-if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
+if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
     log_status "Running the configure script..."
 
     if [ ! -f configure ]; then
@@ -455,7 +539,7 @@ if [ ! -f fontforge.configure-complete ] || [ "$opt1" = "--reconfigure" ]; then
     touch fontforge.configure-complete
 fi
 
-if [ "$opt1" != "--nomake" ]; then
+if (( ! $nomake )); then
     log_status "Compiling FontForge..."
     make -j 4	|| bail "FontForge make"
 
@@ -595,7 +679,7 @@ printf "FontForge Windows build ($ARCHNUM-bit)\r\n$current_date\r\n$actual_hash 
 printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
 cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
 
-if [ "$opt1" == "--makedebug" ] || [ "$opt2" == "--makedebug" ]; then
+if (($makedebug)); then
     log_note "Adding in debugging utilities..."
     cp -f "$PATCH/ffdebugscript.txt" "$RELEASE/" || bail "Couldn't copy debug script"
     cp -f "$PATCH/fontforge-debug.bat" "$RELEASE/" || bail "Couldn't copy fontforge-debug.bat"

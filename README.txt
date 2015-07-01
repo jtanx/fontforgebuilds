@@ -21,6 +21,12 @@ See https://sourceforge.net/p/fontforgebuilds/wiki/Using%20the%20build%20script/
 --------------------------------------------------------------------------------
 
 CHANGELOG:
+01/07/15
+* Another overhaul to use precompiled X11, libspiro and libuninameslist
+  libraries by default. This should speed up compiling FontForge from
+  complete scratch. Cairo and Pango are still compiled by default, since
+  these libraries may be used by other programs, and the versions compiled
+  against X11 are not completely compatible with these programs.
 14/06/14
 * Overhauled the build system to allow building 32 and 64 bit builds in one
   MSYS2 installation.
