@@ -1,13 +1,23 @@
 diff --git a/src/xftglyphs.c b/src/xftglyphs.c
-index 4b5fb82..7283937 100644
+index 4b5fb82..821ea79 100644
 --- a/src/xftglyphs.c
 +++ b/src/xftglyphs.c
-@@ -927,7 +927,7 @@ _XftFontManageMemory (Display *dpy, XftFont *pub)
+@@ -21,6 +21,7 @@
+  */
+ 
+ #include "xftint.h"
++#include <inttypes.h>
+ #include FT_OUTLINE_H
+ #include FT_LCD_FILTER_H
+ 
+@@ -926,8 +927,8 @@ _XftFontManageMemory (Display *dpy, XftFont *pub)
+ 	if (XftDebug() & XFT_DBG_CACHE)
  	{
  	    if (font->glyph_memory > font->max_glyph_memory)
- 		printf ("Reduce memory for font 0x%lx from %ld to %ld\n",
+-		printf ("Reduce memory for font 0x%lx from %ld to %ld\n",
 -			font->glyphset ? font->glyphset : (unsigned long) font,
-+			font->glyphset ? font->glyphset : (intptr_t) font,
++		printf ("Reduce memory for font 0x%" PRIxPTR " from %ld to %ld\n",
++			font->glyphset ? (uintptr_t)font->glyphset : (uintptr_t)font,
  			font->glyph_memory, font->max_glyph_memory);
  	}
  	while (font->glyph_memory > font->max_glyph_memory)
