@@ -475,15 +475,14 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
     cd ..
 fi
 
-# For the source only; to enable the debugger in FontForge
-if [ ! -d freetype-2.6 ]; then
-    log_status "Extracting the FreeType 2.6 source..."
-    tar axvf "$SOURCE/freetype-2.6.tar.bz2" || bail "FreeType2 extraction"
-fi
-
-log_status "Finished installing prerequisites, attempting to install FontForge!"
-
 if (( ! $nomake )); then
+    # For the source only; to enable the debugger in FontForge
+    if [ ! -d freetype-2.6 ]; then
+        log_status "Extracting the FreeType 2.6 source..."
+        tar axvf "$SOURCE/freetype-2.6.tar.bz2" || bail "FreeType2 extraction"
+    fi
+    
+    log_status "Finished installing prerequisites, attempting to install FontForge!"
     # fontforge
     if [ ! -d fontforge ]; then
             if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
