@@ -476,9 +476,9 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
 fi
 
 # For the source only; to enable the debugger in FontForge
-if [ ! -d freetype-2.5.5 ]; then
-    log_status "Extracting the FreeType 2.5.5 source..."
-    tar axvf "$SOURCE/freetype-2.5.5.tar.bz2" || bail "FreeType2 extraction"
+if [ ! -d freetype-2.6 ]; then
+    log_status "Extracting the FreeType 2.6 source..."
+    tar axvf "$SOURCE/freetype-2.6.tar.bz2" || bail "FreeType2 extraction"
 fi
 
 log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -535,7 +535,7 @@ if (( ! $nomake )); then
             --disable-static \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.5.5" \
+            --with-freetype-source="$WORK/freetype-2.6" \
             --without-libreadline \
             || bail "FontForge configure"
         touch fontforge.configure-complete
