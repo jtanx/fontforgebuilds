@@ -12,6 +12,7 @@ yes=0
 makedebug=0
 depsfromscratch=0
 precompiled_pango_cairo=0
+appveyor=0
 
 function dohelp() {
     echo "Usage: `basename $0` [options]"
@@ -22,13 +23,13 @@ function dohelp() {
     echo "  -y, --yes          Say yes to all build script prompts"
     echo "  -d, --makedebug    Adds in debugging utilities into the build (adds a gdb"
     echo "                     automation script)"
+    echo "  -a, --appveyor     AppVeyor specific settings (in-source build)"
     echo "  -s, --depsfromscratch Builds all X11 libraries, libspiro and libuninameslist"
     echo "                        from source. Useful only for debugging these libraries."
     echo "  -p, --precompiled-pango-cairo Use the precompiled versions of Pango and"
     echo "                                Cairo that have X11 support. Not recommended"
     echo "                                unless you use MSYS2 only for building"
     echo "                                FontForge and nothing else."
-    
     exit $1
 }
 
@@ -81,7 +82,7 @@ function detect_arch_switch () {
 log_note "MSYS2 FontForge build script..."
 
 # Retrieve input arguments to script
-optspec=":hrnydsp-:"
+optspec=":hrnydasp-:"
 while getopts "$optspec" optchar; do
     case "${optchar}" in
         -)
@@ -94,6 +95,8 @@ while getopts "$optspec" optchar; do
                     makedebug=$((1-makedebug)) ;;
                 depsfromscratch)
                     depsfromscratch=$((1-depsfromscratch)) ;;
+                appveyor)
+                    appveyor=$((1-appveyor)) ;;
                 precompiled-pango-cairo)
                     precompiled_pango_cairo=$((1-precompiled_pango_cairo)) ;;
                 yes)
@@ -110,6 +113,8 @@ while getopts "$optspec" optchar; do
             nomake=$((1-nomake)) ;;
         d)
             makedebug=$((1-makedebug)) ;;
+        a)
+            appveyor=$((1-appveyor)) ;;
         s)
             depsfromscratch=$((1-depsfromscratch)) ;;
         p)
@@ -123,6 +128,11 @@ while getopts "$optspec" optchar; do
             dohelp 1 ;;
     esac
 done
+
+if (($appveyor)); then
+    depsfromscratch=0
+    precompiled_pango_cairo=1
+fi
 
 # Set working folders
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -213,42 +223,36 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     IOPTS="-S --noconfirm --needed"
     # Install the base MSYS packages needed
-    pacman $IOPTS diffutils findutils gawk liblzma m4 make patch tar xz git binutils
-
-    ## Automake stuff
-    pacman $IOPTS automake autoconf pkg-config
+    pacman $IOPTS diffutils findutils make patch tar automake autoconf pkg-config
 
     ## Other libs
-    pacman $IOPTS $PMPREFIX-$PYINST $PMPREFIX-openssl
+    pacman $IOPTS $PMPREFIX-{$PYINST,openssl}
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-gcc $PMPREFIX-gmp $PMPREFIX-ntldd-git
-    pacman $IOPTS $PMPREFIX-gettext $PMPREFIX-libiconv $PMPREFIX-libtool
+    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
     
     if (($precompiled_pango_cairo)); then
         log_note "Installing precompiled Pango and Cairo libraries..."
-        pacman $IOPTS --force $PMPREFIX-cairo-x11 $PMPREFIX-pango-x11 || \
+        pacman $IOPTS --force $PMPREFIX-{cairo-x11,pango-x11} || \
         bail "Install Pango/Cairo dependencies manually"
     else
         log_note "Installing vanilla Pango and Cairo libraries..."
-        pacman $IOPTS $PMPREFIX-cairo $PMPREFIX-pango || \
+        pacman $IOPTS $PMPREFIX-{cairo,pango} || \
         bail "Install Pango/Cairo dependencies manually"
     fi
     
     if (( ! $depsfromscratch )); then
         log_note "Installing precompiled X11, libspiro and libuninameslist libs..."
-        pacman $IOPTS --force $PMPREFIX-libx11-git $PMPREFIX-libxext-git
-        pacman $IOPTS $PMPREFIX-libxrender-git $PMPREFIX-libxft-git
-        pacman $IOPTS $PMPREFIX-libspiro-git $PMPREFIX-libuninameslist-git
+        pacman $IOPTS --force $PMPREFIX-{libx11-git,libxext-git}
+        pacman $IOPTS $PMPREFIX-{libxrender-git,libxft-git}
+        pacman $IOPTS $PMPREFIX-{libspiro-git,libuninameslist-git}
     fi
 
     log_status "Installing precompiled devel libraries..."
 
     # Libraries
-    pacman $IOPTS $PMPREFIX-zlib $PMPREFIX-libpng $PMPREFIX-giflib $PMPREFIX-libtiff
-    pacman $IOPTS $PMPREFIX-libjpeg-turbo $PMPREFIX-libxml2 $PMPREFIX-freetype
-    pacman $IOPTS $PMPREFIX-fontconfig $PMPREFIX-glib2 $PMPREFIX-pixman
-    pacman $IOPTS $PMPREFIX-harfbuzz
+    pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2}
+    pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz}
 
     touch $PMTEST
     log_note "Finished installing precompiled libraries!"
@@ -484,36 +488,40 @@ if (( ! $nomake )); then
     
     log_status "Finished installing prerequisites, attempting to install FontForge!"
     # fontforge
-    if [ ! -d fontforge ]; then
-            if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
-                log_status "Found copy from other arch build, performing local clone..."
-                # Don't use git clone - need the remotes for updating
-                cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
-                cd "fontforge"
-                git clean -dxf || bail "Could not clean repository"
-                git reset --hard || bail "Could not reset repository"
-            else
-                log_status "Cloning the fontforge repository..."
-                git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
-                cd "fontforge"
-            fi
+    if (($appveyor)); then
+        cd $APPVEYOR_BUILD_FOLDER
     else
-        cd "fontforge"
+        if [ ! -d fontforge ]; then
+                if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
+                    log_status "Found copy from other arch build, performing local clone..."
+                    # Don't use git clone - need the remotes for updating
+                    cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
+                    cd "fontforge"
+                    git clean -dxf || bail "Could not clean repository"
+                    git reset --hard || bail "Could not reset repository"
+                else
+                    log_status "Cloning the fontforge repository..."
+                    git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
+                    cd "fontforge"
+                fi
+        else
+            cd "fontforge";
+        fi
     fi
 
     # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
     if [ ! -d gnulib ]; then
         log_status "Cloning gnulib..."
-        git clone --depth 50 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
+        git clone --depth 10 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
     fi
 
-    git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
-    if [ $? -eq 0 ]; then
-        log_status "Patching the gnulib..."
-        git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
-        rm -f fontforge.configure-complete configure
-        log_note "Patch applied."
-    fi
+    #git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
+    #if [ $? -eq 0 ]; then
+    #    log_status "Patching the gnulib..."
+    #    git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
+    #    rm -f fontforge.configure-complete configure
+    #    log_note "Patch applied."
+    #fi
 
     if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
         log_status "Running the configure script..."
