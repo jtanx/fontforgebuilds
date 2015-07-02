@@ -10,9 +10,10 @@ reconfigure=0
 nomake=0
 yes=0
 makedebug=0
+appveyor=0
+depsonly=0
 depsfromscratch=0
 precompiled_pango_cairo=0
-appveyor=0
 
 function dohelp() {
     echo "Usage: `basename $0` [options]"
@@ -24,6 +25,7 @@ function dohelp() {
     echo "  -d, --makedebug    Adds in debugging utilities into the build (adds a gdb"
     echo "                     automation script)"
     echo "  -a, --appveyor     AppVeyor specific settings (in-source build)"
+    echo "  -l, --depsonly     Only install the dependencies and not FontForge itself."
     echo "  -s, --depsfromscratch Builds all X11 libraries, libspiro and libuninameslist"
     echo "                        from source. Useful only for debugging these libraries."
     echo "  -p, --precompiled-pango-cairo Use the precompiled versions of Pango and"
@@ -82,7 +84,7 @@ function detect_arch_switch () {
 log_note "MSYS2 FontForge build script..."
 
 # Retrieve input arguments to script
-optspec=":hrnydasp-:"
+optspec=":hrnydalsp-:"
 while getopts "$optspec" optchar; do
     case "${optchar}" in
         -)
@@ -93,10 +95,12 @@ while getopts "$optspec" optchar; do
                     nomake=$((1-nomake)) ;;
                 makedebug)
                     makedebug=$((1-makedebug)) ;;
-                depsfromscratch)
-                    depsfromscratch=$((1-depsfromscratch)) ;;
                 appveyor)
                     appveyor=$((1-appveyor)) ;;
+                depsonly)
+                    depsonly=$((1-depsonly)) ;;
+                depsfromscratch)
+                    depsfromscratch=$((1-depsfromscratch)) ;;
                 precompiled-pango-cairo)
                     precompiled_pango_cairo=$((1-precompiled_pango_cairo)) ;;
                 yes)
@@ -115,6 +119,8 @@ while getopts "$optspec" optchar; do
             makedebug=$((1-makedebug)) ;;
         a)
             appveyor=$((1-appveyor)) ;;
+        l)
+            depsonly=$((1-depsonly)) ;;
         s)
             depsfromscratch=$((1-depsfromscratch)) ;;
         p)
@@ -477,6 +483,11 @@ if [ ! -f run_fontforge/run_fontforge.complete ]; then
     || bail "run_fontforge"
     touch run_fontforge.complete
     cd ..
+fi
+
+if (($depsonly)); then
+    log_note "Installation of dependencies complete."
+    exit 0
 fi
 
 if (( ! $nomake )); then
