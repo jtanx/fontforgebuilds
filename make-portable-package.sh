@@ -67,9 +67,14 @@ DEBUG=$BASE/debugging-symbols/
 log_note "Packaging $ARCH-bit release..."
 pacman -S --noconfirm --needed p7zip > /dev/null 2>&1 
 
-version_hash=`git -C $WORK/fontforge rev-parse master`
+if [ -z "$FFPATH" ]; then
+    FFPATH=$WORK/fontforge
+fi
+
+version_hash=`git -C $FFPATH rev-parse master`
 version_hash=${version_hash:0:6}
 log_status "Version hash is $version_hash"
+log_status "Working directory: `pwd`"
 
 log_status "Building the release archive..."
 filename="$PKGPREFIX-$version_hash-$postfix.7z"
