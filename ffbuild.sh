@@ -198,7 +198,7 @@ export CPPFLAGS="${CFLAGS}"
 export LIBS=""
 
 # Install all the available precompiled binaries
-if [ ! -f $PMTEST ]; then
+if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
     if (( ! $depsfromscratch )) || (($precompiled_pango_cairo)); then
         if ! grep -q fontforgelibs /etc/pacman.conf; then
@@ -433,7 +433,7 @@ if (($depsfromscratch)); then
 fi
 
 #While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
-if (( ! $precompiled_pango_cairo )); then
+if (( ! $nomake )) && (( ! $precompiled_pango_cairo )); then
     log_status "Installing Cairo..."
     #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
     install_source_patch cairo-1.14.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
@@ -483,63 +483,64 @@ fi
 
 log_status "Finished installing prerequisites, attempting to install FontForge!"
 
-# fontforge
-if [ ! -d fontforge ]; then
-        if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
-            log_status "Found copy from other arch build, performing local clone..."
-            # Don't use git clone - need the remotes for updating
-            cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
-            cd "fontforge"
-            git clean -dxf || bail "Could not clean repository"
-            git reset --hard || bail "Could not reset repository"
-        else
-            log_status "Cloning the fontforge repository..."
-            git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
-            cd "fontforge"
-        fi
-else
-    cd "fontforge"
-fi
-
-# Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
-if [ ! -d gnulib ]; then
-    log_status "Cloning gnulib..."
-    git clone --depth 50 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
-fi
-
-git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
-if [ $? -eq 0 ]; then
-    log_status "Patching the gnulib..."
-    git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
-    rm -f fontforge.configure-complete configure
-    log_note "Patch applied."
-fi
-
-if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
-    log_status "Running the configure script..."
-
-    if [ ! -f configure ]; then
-        log_note "No configure script detected; running ./boostrap..."
-        ./bootstrap --force || bail "FontForge autogen"
+if (( ! $nomake )); then
+    # fontforge
+    if [ ! -d fontforge ]; then
+            if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
+                log_status "Found copy from other arch build, performing local clone..."
+                # Don't use git clone - need the remotes for updating
+                cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
+                cd "fontforge"
+                git clean -dxf || bail "Could not clean repository"
+                git reset --hard || bail "Could not reset repository"
+            else
+                log_status "Cloning the fontforge repository..."
+                git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
+                cd "fontforge"
+            fi
+    else
+        cd "fontforge"
     fi
 
-    # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
-    # windows-cross-compile to disable check for libuuid
-    #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
-    #LIBS="${LIBS} -lmsvcr100" \
-    PYTHON=$PYINST \
-    ./configure $HOST \
-        --enable-shared \
-        --disable-static \
-        --datarootdir=/usr/share/share_ff \
-        --without-libzmq \
-        --with-freetype-source="$WORK/freetype-2.5.5" \
-        --without-libreadline \
-        || bail "FontForge configure"
-    touch fontforge.configure-complete
-fi
+    # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
+    if [ ! -d gnulib ]; then
+        log_status "Cloning gnulib..."
+        git clone --depth 50 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
+    fi
 
-if (( ! $nomake )); then
+    git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
+    if [ $? -eq 0 ]; then
+        log_status "Patching the gnulib..."
+        git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
+        rm -f fontforge.configure-complete configure
+        log_note "Patch applied."
+    fi
+
+    if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
+        log_status "Running the configure script..."
+
+        if [ ! -f configure ]; then
+            log_note "No configure script detected; running ./boostrap..."
+            ./bootstrap --force || bail "FontForge autogen"
+        fi
+
+        # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
+        # windows-cross-compile to disable check for libuuid
+        #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
+        #LIBS="${LIBS} -lmsvcr100" \
+        
+        PYTHON=$PYINST \
+        ./configure $HOST \
+            --enable-shared \
+            --disable-static \
+            --datarootdir=/usr/share/share_ff \
+            --without-libzmq \
+            --with-freetype-source="$WORK/freetype-2.5.5" \
+            --without-libreadline \
+            || bail "FontForge configure"
+        touch fontforge.configure-complete
+    fi
+
     log_status "Compiling FontForge..."
     make -j 4	|| bail "FontForge make"
 
