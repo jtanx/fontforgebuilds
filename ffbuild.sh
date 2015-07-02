@@ -135,11 +135,6 @@ while getopts "$optspec" optchar; do
     esac
 done
 
-if (($appveyor)); then
-    depsfromscratch=0
-    precompiled_pango_cairo=1
-fi
-
 # Set working folders
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 PATCH=$BASE/patches/
@@ -188,6 +183,14 @@ HOST="$HOST --prefix $TARGET"
 PMTEST="$BASE/.pacman-$MINGVER-installed"
 POTRACE_ARC="$POTRACE_DIR.tar.gz"
 
+# Check for AppVeyor specific settings
+if (($appveyor)); then
+    depsfromscratch=0
+    precompiled_pango_cairo=1
+    FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
+else
+    FFPATH=$WORK/fontforge
+fi
 
 # Make the output directories
 mkdir -p "$WORK"
@@ -499,25 +502,21 @@ if (( ! $nomake )); then
     
     log_status "Finished installing prerequisites, attempting to install FontForge!"
     # fontforge
-    if (($appveyor)); then
-        cd $APPVEYOR_BUILD_FOLDER
+    if (( ! $appveyor )) && [ ! -d fontforge ]; then
+            if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
+                log_status "Found copy from other arch build, performing local clone..."
+                # Don't use git clone - need the remotes for updating
+                cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
+                cd "fontforge"
+                git clean -dxf || bail "Could not clean repository"
+                git reset --hard || bail "Could not reset repository"
+            else
+                log_status "Cloning the fontforge repository..."
+                git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
+                cd "fontforge"
+            fi
     else
-        if [ ! -d fontforge ]; then
-                if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
-                    log_status "Found copy from other arch build, performing local clone..."
-                    # Don't use git clone - need the remotes for updating
-                    cp -r "$BASE/work/$MINGOTHER/fontforge" . || bail "Local clone failed"
-                    cd "fontforge"
-                    git clean -dxf || bail "Could not clean repository"
-                    git reset --hard || bail "Could not reset repository"
-                else
-                    log_status "Cloning the fontforge repository..."
-                    git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
-                    cd "fontforge"
-                fi
-        else
-            cd "fontforge";
-        fi
+        cd "$FFPATH";
     fi
 
     # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
@@ -692,9 +691,9 @@ cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-pac
 cp -f "/usr/local/lib/python2.7/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Generating the version file..."
-actual_branch=`git -C $WORK/fontforge rev-parse --abbrev-ref HEAD`
-actual_hash=`git -C $WORK/fontforge rev-parse HEAD`
-version_hash=`git -C $WORK/fontforge rev-parse master`
+actual_branch=`git -C $FFPATH rev-parse --abbrev-ref HEAD`
+actual_hash=`git -C $FFPATH rev-parse HEAD`
+version_hash=`git -C $FFPATH rev-parse master`
 current_date=`date "+%c %z"`
 printf "FontForge Windows build ($ARCHNUM-bit)\r\n$current_date\r\n$actual_hash [$actual_branch]\r\nBased on master: $version_hash\r\n\r\n" > $RELEASE/VERSION.txt
 printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
