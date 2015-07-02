@@ -38,21 +38,21 @@ function dohelp() {
 # Colourful text
 # Red text
 function log_error() {
-    echo -e "\e[31m$@\e[0m"
+    echo -ne "\e[31m"; echo "$@"; echo -ne "\e[0m"
 }
 
 # Yellow text
 function log_status() {
-    echo -e "\e[33m$@\e[0m"
+    echo -ne "\e[33m"; echo "$@"; echo -ne "\e[0m"
 }
 
 # Green text
 function log_note() {
-    echo -e "\e[32m$@\e[0m"
+    echo -ne "\e[32m"; echo "$@"; echo -ne "\e[0m"
 }
 
 function bail () {
-    echo -e "\e[31m\e[1m!!! Build failed at: ${@}\e[0m"
+    echo -ne "\e[31m\e[1m"; echo "!!! Build failed at: ${@}"; echo -ne "\e[0m"
     exit 1
 }
 
@@ -185,11 +185,14 @@ POTRACE_ARC="$POTRACE_DIR.tar.gz"
 
 # Check for AppVeyor specific settings
 if (($appveyor)); then
+    yes=1
     depsfromscratch=0
     precompiled_pango_cairo=1
     FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
+    DLLROOT=`cygpath -w $APPVEYOR_BUILD_FOLDER`
 else
     FFPATH=$WORK/fontforge
+    DLLROOT=`cygpath -w /`
 fi
 
 # Make the output directories
@@ -568,15 +571,15 @@ fi
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
 log_note "The executable: $ffex"
+log_note "DLL root: $DLLROOT"
 
-MSYS2ROOT=`cygpath -w /`
-fflibs=`ntldd -D "$TARGET/bin" -R "$ffex" \
+fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" \
 | grep dll \
 | sed -e '/^[^\t]/ d'  \
 | sed -e 's/\t//'  \
 | sed -e 's/.*=..//'  \
 | sed -e 's/ (0.*)//' \
-| grep -F "$MSYS2ROOT"
+| grep -F "$DLLROOT"
 `
 
 log_status "Copying the FontForge executable..."
