@@ -13,10 +13,23 @@ if ! grep -Fxq "$irc" ~/.inputrc; then
 fi
 
 # Shortcut for grepping c code
-gshort="alias grepc=\"grep -lr --include=\\\"*.[ch]\\\"\""
+gshort='alias grepc="grep -lr --include=\"*.[ch]\" --include=\"*.cpp\""'
 if ! grep -Fxq "$gshort" ~/.bash_profile; then
     log_status "Adding grepc shortcut to ~/.bash_profile..."
     printf "\n%s\n" "$gshort" >> ~/.bash_profile
+fi
+
+gnshort='alias grepnc="grep -nr --include=\"*.[ch]\" --include=\"*.cpp\""'
+if ! grep -Fxq "$gnshort" ~/.bash_profile; then
+    log_status "Adding grepnc shortcut to ~/.bash_profile..."
+    printf "\n%s\n" "$gnshort" >> ~/.bash_profile
+fi
+
+#Doing a system update
+pup="alias pacman-system-update=\"pacman -S --needed bash pacman pacman-mirrors msys2-runtime\""
+if ! grep -Fxq "$pup" ~/.bash_profile; then
+    log_status "Adding pacman-system-update to ~/.bash_profile..."
+    printf "\n%s\n" "$pup" >> ~/.bash_profile
 fi
 
 npp="C:/Program Files/Notepad++/notepad++.exe"
@@ -29,10 +42,11 @@ fi
 
 # We have Notepad++
 if [ ! -z "$npp" ]; then
-	nppex="alias npp=\"\\\"$npp\\\"\""
+    nppex='alias npp="\"$NPP\""'
 	if ! grep -Fxq "$nppex" ~/.bash_profile; then
 		log_status "Adding npp shortcut to ~/.bash_profile..."
-		printf "\n%s\n" "$nppex" >> ~/.bash_profile
+        printf "\nNPP=\"%s\"\n" "$npp" >> ~/.bash_profile
+		printf "%s\n" "$nppex" >> ~/.bash_profile
 	fi;
 	
 	log_status "Using notepad++ as git editor..."
