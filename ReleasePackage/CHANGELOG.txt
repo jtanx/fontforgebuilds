@@ -1,3 +1,6 @@
+04-07-15 (14-06-15) (r4):
+* Add in many more locales to bin/VcXsrv/locale/locale.alias
+  This should fix titles not being displayed properly. (#2323)
 14-06-15 (r3):
 * Fix another bug in Unicode filename handling (#2364)
 14-06-15:

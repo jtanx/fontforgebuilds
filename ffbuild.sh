@@ -325,7 +325,7 @@ function install_source_patch () {
         else
             log_note "Sensed that the configure script has already run; delete $folder.configure-complete to rerun configure"
         fi
-        cmd="$premakeflags make -j4 $postmakeflags || bail '$folder'"
+        cmd="$premakeflags make -j$(($(nproc)+1)) $postmakeflags || bail '$folder'"
         log_note "$cmd"
         eval "$cmd"
         make install || bail "$folder"
@@ -562,10 +562,10 @@ if (( ! $nomake )); then
     fi
 
     log_status "Compiling FontForge..."
-    make -j 4	|| bail "FontForge make"
+    make -j$(($(nproc)+1))	|| bail "FontForge make"
 
     log_status "Installing FontForge..."
-    make -j 4 install || bail "FontForge install"
+    make -j$(($(nproc)+1)) install || bail "FontForge install"
 fi
 
 log_status "Assembling the release package..."
