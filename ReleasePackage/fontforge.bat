@@ -4,12 +4,11 @@ set FF_XPORT=11
 set DISPLAY=127.0.0.1:%FF_XPORT%.0
 set "XLOCALEDIR=%FF%bin\VcXsrv\locale"
 set "XLOCALELIBDIR=%XLOCALEDIR%"
-set AUTOTRACE=potrace
 set "HOME=%FF%"
+set "PYTHONHOME=%FF%"
+set "PYTHONPATH=%FF%lib\python2.7"
+set AUTOTRACE=potrace
 set FF_PORTABLE=TRUE
-
-::Set this item to enable experimental Unicode filename support
-::set LC_ALL=C.UTF-8
 
 ::Set this to your language code to change the FontForge UI language
 ::See share/locale/ for a list of supported language codes

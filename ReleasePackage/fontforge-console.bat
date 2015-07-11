@@ -1,6 +1,8 @@
 @echo off
 echo Configuring the system path to add FontForge...
 set FF=%~dp0
+set "PYTHONHOME=%FF%"
+set "PYTHONPATH=%FF%lib\python2.7"
 set "PATH=%FF%;%FF%\bin;%PATH%"
 set FF_PATH_ADDED=TRUE
 
