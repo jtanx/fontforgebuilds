@@ -38,14 +38,14 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPWSTR cmd, int nCmdShow) 
 	}
 
 	if (_wfopen_s(&fp, cmd, L"w")) {
-		MessageBox(NULL, "Could not open specified file", NULL, MB_OK);
+		MessageBox(NULL, L"Could not open specified file", NULL, MB_OK);
 		return 1;
 	}
 	EnumSystemLocalesEx(LocaleProc, LOCALE_ALL, (LPARAM)fp, 0);
 	fclose(fp);
 
 	//Displays the current locale
-	setlocale(LC_ALL, "Afrikaans_South-Africa.1252");
+	setlocale(LC_ALL, "");
 	MessageBox(NULL, _wsetlocale(LC_CTYPE, NULL), L"LC_ALL", MB_OK);
 	return 0;
 }
