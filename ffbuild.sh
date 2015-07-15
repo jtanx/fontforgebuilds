@@ -189,10 +189,8 @@ if (($appveyor)); then
     depsfromscratch=0
     precompiled_pango_cairo=1
     FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
-    DLLROOT=`cygpath -w $APPVEYOR_BUILD_FOLDER`
 else
     FFPATH=$WORK/fontforge
-    DLLROOT=`cygpath -w /`
 fi
 
 # Make the output directories
@@ -570,8 +568,11 @@ fi
 
 log_status "Assembling the release package..."
 ffex=`which fontforge.exe`
+MSYSROOT=`cygpath -w /`
+FFEXROOT=`cygpath -w $(dirname "${ffex}")`
 log_note "The executable: $ffex"
-log_note "DLL root: $DLLROOT"
+log_note "MSYS root: $MSYSROOT"
+log_note "FFEX root: $FFEXROOT"
 
 fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" \
 | grep dll \
@@ -579,7 +580,7 @@ fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" \
 | sed -e 's/\t//'  \
 | sed -e 's/.*=..//'  \
 | sed -e 's/ (0.*)//' \
-| grep -F "$DLLROOT"
+| grep -F -e "$MSYSROOT" -e "$FFEXROOT" \
 `
 
 log_status "Copying the FontForge executable..."
