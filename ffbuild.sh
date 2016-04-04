@@ -450,11 +450,11 @@ fi
 if (( ! $nomake )) && (( ! $precompiled_pango_cairo )); then
     log_status "Installing Cairo..."
     #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
-    install_source_patch cairo-1.14.4.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
+    install_source_patch cairo-1.15.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
 
     # Download from http://ftp.gnome.org/pub/gnome/sources/pango
     log_status "Installing Pango..."
-    install_source pango-1.38.1.tar.xz "" "--with-xft --with-cairo"
+    install_source pango-1.40.0.tar.xz "" "--with-xft --with-cairo"
 fi
 
 cd $WORK
@@ -497,9 +497,9 @@ fi
 
 if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
-    if [ ! -d freetype-2.6.1 ]; then
-        log_status "Extracting the FreeType 2.6.1 source..."
-        tar axvf "$SOURCE/freetype-2.6.1.tar.bz2" || bail "FreeType2 extraction"
+    if [ ! -d freetype-2.6.3 ]; then
+        log_status "Extracting the FreeType 2.6.3 source..."
+        tar axvf "$SOURCE/freetype-2.6.3.tar.bz2" || bail "FreeType2 extraction"
     fi
     
     log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -554,7 +554,7 @@ if (( ! $nomake )); then
             --disable-static \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.6.1" \
+            --with-freetype-source="$WORK/freetype-2.6.3" \
             --without-libreadline \
             || bail "FontForge configure"
         touch fontforge.configure-complete
