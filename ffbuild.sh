@@ -166,7 +166,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
     PMPREFIX="mingw-w64-x86_64"
     PYINST=python3
-    PYVER=python3.4
+    PYVER=python3.5
     VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
     POTRACE_DIR="potrace-1.13.win64"
 else
@@ -455,6 +455,9 @@ if (( ! $nomake )) && (( ! $precompiled_pango_cairo )); then
     # Download from http://ftp.gnome.org/pub/gnome/sources/pango
     log_status "Installing Pango..."
     install_source pango-1.40.0.tar.xz "" "--with-xft --with-cairo"
+
+    #log_status "Installing Gtk..."
+    #install_source gtk+-3.20.2.tar.xz "" "--enable-win32-backend --enable-shared --enable-introspection --enable-broadway-backend --disable-cups --disable-x11-backend --with-included-immodules --enable-silent-rules"
 fi
 
 cd $WORK
@@ -552,6 +555,7 @@ if (( ! $nomake )); then
         ./configure $HOST \
             --enable-shared \
             --disable-static \
+            --enable-gdk \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
             --with-freetype-source="$WORK/freetype-2.6.3" \
@@ -565,6 +569,13 @@ if (( ! $nomake )); then
 
     log_status "Installing FontForge..."
     make -j$(($(nproc)+1)) install || bail "FontForge install"
+
+    #cd gdraw || bail "cd gdraw"
+    #make -j$(($(nproc)+1))	|| bail "FontForge make"
+    #make install || bail "Gdraw install"
+    #cp "$TARGET/bin/libgdraw-5.dll" "$RELEASE/bin" || bail "Gdraw copy"
+    #log_note "DONE"
+    #exit
 fi
 
 log_status "Assembling the release package..."

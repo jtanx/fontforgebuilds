@@ -1,3 +1,8 @@
+13-08-16:
+* Sync with git master (prerelease)
+07-04-16:
+* Fix crash in kern pairs dialogue (#2681)
+* Fix preferences dialogue being too large (#2675)
 05-04-16:
 * Sync with the April 20160404 release
 04-07-15 (14-06-15) (r4):

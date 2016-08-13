@@ -5,7 +5,7 @@
 if [ "$MSYSTEM" = "MINGW32" ]; then
 	PYVER=python2.7
 else
-	PYVER=python3.4
+	PYVER=python3.5
 fi
 PYDIR=/$MSYSTEM/lib/$PYVER
 
