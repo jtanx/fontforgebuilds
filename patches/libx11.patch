@@ -1,5 +1,5 @@
 diff --git a/include/X11/Xlib.h b/include/X11/Xlib.h
-index 2bffa76..3be3af0 100644
+index 84403f7..1212d04 100644
 --- a/include/X11/Xlib.h
 +++ b/include/X11/Xlib.h
 @@ -1385,7 +1385,7 @@ typedef struct {
@@ -12,10 +12,10 @@ index 2bffa76..3be3af0 100644
  #endif
  
 diff --git a/include/X11/Xlibint.h b/include/X11/Xlibint.h
-index 4431559..d5f114d 100644
+index 6b95bcf..7505bed 100644
 --- a/include/X11/Xlibint.h
 +++ b/include/X11/Xlibint.h
-@@ -273,7 +273,7 @@ struct _XLockPtrs {
+@@ -378,7 +378,7 @@ struct _XLockPtrs {
  	);
  };
  
@@ -127,7 +127,7 @@ index 9d4e462..69523cc 100644
  	break;
  
 diff --git a/src/KeysymStr.c b/src/KeysymStr.c
-index c7c4704..d336559 100644
+index c7c4704..140cfc4 100644
 --- a/src/KeysymStr.c
 +++ b/src/KeysymStr.c
 @@ -107,7 +107,7 @@ char *XKeysymToString(KeySym ks)
@@ -153,7 +153,7 @@ index 6771908..182d857 100644
  			if (j > myargc) j = myargc;
  			for (; j > 0; j--) {
 diff --git a/src/XlibInt.c b/src/XlibInt.c
-index 80c1298..635e3ba 100644
+index 7296948..91af8ec 100644
 --- a/src/XlibInt.c
 +++ b/src/XlibInt.c
 @@ -31,7 +31,7 @@ from The Open Group.
@@ -165,7 +165,7 @@ index 80c1298..635e3ba 100644
  #define _XLIBINT_
  #endif
  #ifdef HAVE_CONFIG_H
-@@ -1735,11 +1735,7 @@ void *_XGetRequest(Display *dpy, CARD8 type, size_t len)
+@@ -1740,11 +1740,7 @@ void *_XGetRequest(Display *dpy, CARD8 type, size_t len)
   * be converted to "C:/usr/X11R6.3/lib/X11/locale/locale.dir".
   */
  
@@ -178,7 +178,7 @@ index 80c1298..635e3ba 100644
  {
      if (access (path, F_OK) == 0) {
  	if (strlen (path) < len_pathbuf)
-@@ -1754,15 +1750,11 @@ static int access_file (path, pathbuf, len_pathbuf, pathret)
+@@ -1759,15 +1755,11 @@ static int access_file (path, pathbuf, len_pathbuf, pathret)
      return 0;
  }
  
@@ -196,7 +196,7 @@ index 80c1298..635e3ba 100644
      char buf[MAX_PATH];
      char* bufp;
  
-@@ -1827,15 +1819,14 @@ static int AccessFile (path, pathbuf, len_pathbuf, pathret)
+@@ -1832,15 +1824,14 @@ static int AccessFile (path, pathbuf, len_pathbuf, pathret)
      return 0;
  }
  
@@ -214,7 +214,7 @@ index 80c1298..635e3ba 100644
      if (AccessFile (path, buf, MAX_PATH, &bufp))
  	ret = open (bufp, flags);
  
-@@ -1846,10 +1837,7 @@ int _XOpenFile(path, flags)
+@@ -1851,10 +1842,7 @@ int _XOpenFile(path, flags)
      return ret;
  }
  
@@ -226,7 +226,7 @@ index 80c1298..635e3ba 100644
  {
      char buf[MAX_PATH];
      char* bufp = NULL;
-@@ -1866,9 +1854,7 @@ int _XOpenFileMode(path, flags, mode)
+@@ -1871,9 +1859,7 @@ int _XOpenFileMode(path, flags, mode)
      return ret;
  }
  
@@ -237,7 +237,7 @@ index 80c1298..635e3ba 100644
  {
      char buf[MAX_PATH];
      char* bufp = NULL;
-@@ -1885,8 +1871,7 @@ void* _XFopenFile(path, mode)
+@@ -1890,8 +1876,7 @@ void* _XFopenFile(path, mode)
      return ret;
  }
  
@@ -247,7 +247,7 @@ index 80c1298..635e3ba 100644
  {
      char buf[MAX_PATH];
      char* bufp;
-@@ -1904,7 +1889,7 @@ int _XAccessFile(path)
+@@ -1909,7 +1894,7 @@ int _XAccessFile(path)
  
  #endif
  
@@ -257,7 +257,7 @@ index 80c1298..635e3ba 100644
  int _Xdebug = 0;
  int *_Xdebug_p = &_Xdebug;
 diff --git a/src/Xxcbint.h b/src/Xxcbint.h
-index bf41c23..2143543 100644
+index 4ef13d2..3d2377a 100644
 --- a/src/Xxcbint.h
 +++ b/src/Xxcbint.h
 @@ -8,7 +8,7 @@
@@ -342,10 +342,10 @@ index a7c1d98..ec94a7c 100644
  	    else if (size == sizeof(XPointer)) *dst = (XPointer)u.ptr;
  	    else memcpy( (char*)dst, (char*)src, (int)size );
 diff --git a/src/xlibi18n/XDefaultIMIF.c b/src/xlibi18n/XDefaultIMIF.c
-index 2eb52ae..624e544 100644
+index 7c32ce2..bb57cd0 100644
 --- a/src/xlibi18n/XDefaultIMIF.c
 +++ b/src/xlibi18n/XDefaultIMIF.c
-@@ -293,7 +293,7 @@ _SetICValueData(XIC ic, XIMArg *values, XICOp_t mode)
+@@ -284,7 +284,7 @@ _SetICValueData(XIC ic, XIMArg *values, XICOp_t mode)
      for (p = values; p != NULL && p->name != NULL; p++) {
  	if(strcmp(p->name, XNInputStyle) == 0) {
  	    if (mode == CREATE_IC)
