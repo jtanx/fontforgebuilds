@@ -1,11 +1,11 @@
 diff --git a/configure.ac b/configure.ac
-index 6e7e9c3..fb91750 100644
+index ec31542..a1510ee 100644
 --- a/configure.ac
 +++ b/configure.ac
 @@ -51,7 +51,7 @@ AC_SUBST(HTML_CHECK_RESULT)
  
  # Checks for pkg-config packages
- PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.11)
+ PKG_CHECK_MODULES(XCBPROTO, xcb-proto >= 1.12)
 -NEEDED="pthread-stubs xau >= 0.99.2"
 +NEEDED="xau >= 0.99.2"
  PKG_CHECK_MODULES(NEEDED, $NEEDED)
@@ -46,7 +46,7 @@ index 6e7e9c3..fb91750 100644
  case $host_os in
          # darwin through Snow Leopard has poll() but can't be used to poll character devices.
 diff --git a/src/xcb.h b/src/xcb.h
-index 23fe74e..453acaf 100644
+index 6873e79..4b9561c 100644
 --- a/src/xcb.h
 +++ b/src/xcb.h
 @@ -27,6 +27,13 @@
@@ -107,10 +107,10 @@ index 29e2b6f..6db629b 100644
  {
      socklen_t socknamelen = sizeof(struct sockaddr) + INITIAL_SOCKNAME_SLACK;
 diff --git a/src/xcb_conn.c b/src/xcb_conn.c
-index fa50985..f3c8321 100644
+index 7d09637..7e8c596 100644
 --- a/src/xcb_conn.c
 +++ b/src/xcb_conn.c
-@@ -84,7 +84,7 @@ static int set_fd_flags(const int fd)
+@@ -104,7 +104,7 @@ static int set_fd_flags(const int fd)
  
  #ifdef _WIN32
     u_long iMode = 1; /* non-zero puts it in non-blocking mode, 0 in blocking mode */
@@ -119,7 +119,7 @@ index fa50985..f3c8321 100644
  
     ret = ioctlsocket(fd, FIONBIO, &iMode);
     if(ret != 0)
-@@ -124,7 +124,7 @@ static int write_setup(xcb_connection_t *c, xcb_auth_info_t *auth_info)
+@@ -144,7 +144,7 @@ static int write_setup(xcb_connection_t *c, xcb_auth_info_t *auth_info)
      out.authorization_protocol_name_len = 0;
      out.authorization_protocol_data_len = 0;
      parts[count].iov_len = sizeof(xcb_setup_request_t);
@@ -128,7 +128,7 @@ index fa50985..f3c8321 100644
      parts[count].iov_len = XCB_PAD(sizeof(xcb_setup_request_t));
      parts[count++].iov_base = (char *) pad;
  
-@@ -192,33 +192,48 @@ static int read_setup(xcb_connection_t *c)
+@@ -212,33 +212,48 @@ static int read_setup(xcb_connection_t *c)
  static int write_vec(xcb_connection_t *c, struct iovec **vector, int *count)
  {
      int n;
@@ -183,7 +183,7 @@ index fa50985..f3c8321 100644
      n = *count;
      if (n > IOV_MAX)
          n = IOV_MAX;
-@@ -466,6 +481,13 @@ int _xcb_conn_wait(xcb_connection_t *c, pthread_cond_t *cond, struct iovec **vec
+@@ -486,6 +501,13 @@ int _xcb_conn_wait(xcb_connection_t *c, pthread_cond_t *cond, struct iovec **vec
          }
  #else
          ret = select(c->fd + 1, &rfds, &wfds, 0, 0);
@@ -211,7 +211,7 @@ index 831f283..990c67a 100644
      while(c->ext.extensions_size-- > 0)
          if(c->ext.extensions[c->ext.extensions_size].tag == LAZY_FORCED)
 diff --git a/src/xcb_out.c b/src/xcb_out.c
-index dc42954..4deec33 100644
+index 3601a5f..3d849ea 100644
 --- a/src/xcb_out.c
 +++ b/src/xcb_out.c
 @@ -33,13 +33,14 @@
@@ -230,7 +230,7 @@ index dc42954..4deec33 100644
  {
      if(c->has_error)
          return;
-@@ -244,10 +245,10 @@ unsigned int xcb_send_request(xcb_connection_t *c, int flags, struct iovec *vect
+@@ -290,10 +291,10 @@ uint64_t xcb_send_request_with_fds64(xcb_connection_t *c, int flags, struct iove
          {
              prefix[0] = ((uint32_t *) vector[0].iov_base)[0];
              prefix[1] = ++longlen;
@@ -244,7 +244,7 @@ index dc42954..4deec33 100644
          }
      }
 diff --git a/src/xcb_util.c b/src/xcb_util.c
-index ba0f108..1918e85 100644
+index a3357ef..3293091 100644
 --- a/src/xcb_util.c
 +++ b/src/xcb_util.c
 @@ -327,7 +327,7 @@ static int _xcb_socket(int family, int type, int proto)
