@@ -159,7 +159,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     POTRACE_DIR="potrace-1.13.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
-    
+
     ARCHNUM="64"
     MINGVER=mingw64
     MINGOTHER=mingw32
@@ -225,22 +225,27 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
             log_note "Adding the fontforgelibs repo..."
             echo -ne "\n[fontforgelibs32]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
             echo -ne "[fontforgelibs64]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
-            pacman-key -r 2E618C78
-            pacman-key --lsign-key 2E618C78
+            pacman-key -r 90F90C4A
+            pacman-key --lsign-key 90F90C4A
         fi
     fi
     pacman -Sy --noconfirm
 
     IOPTS="-S --noconfirm --needed"
-    # Install the base MSYS packages needed
-    pacman $IOPTS diffutils findutils make patch tar automake autoconf pkg-config
+
+    if (( ! $appveyor )); then
+        # Install the base MSYS packages needed
+        pacman $IOPTS diffutils findutils make patch tar automake autoconf pkg-config
+
+        # Install MinGW related stuff
+        pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
+    else
+        pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool}
+    fi
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,openssl}
 
-    # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
-    
     if (($precompiled_pango_cairo)); then
         log_note "Installing precompiled Pango and Cairo libraries..."
         pacman $IOPTS --force $PMPREFIX-{cairo-x11,pango-x11} || \
@@ -250,7 +255,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
         pacman $IOPTS $PMPREFIX-{cairo,pango} || \
         bail "Install Pango/Cairo dependencies manually"
     fi
-    
+
     if (( ! $depsfromscratch )); then
         log_note "Installing precompiled X11, libspiro and libuninameslist libs..."
         pacman $IOPTS --force $PMPREFIX-{libx11-git,libxext-git}
@@ -500,11 +505,11 @@ fi
 
 if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
-    if [ ! -d freetype-2.6.3 ]; then
-        log_status "Extracting the FreeType 2.6.3 source..."
-        tar axvf "$SOURCE/freetype-2.6.3.tar.bz2" || bail "FreeType2 extraction"
+    if [ ! -d freetype-2.6.5 ]; then
+        log_status "Extracting the FreeType 2.6.5 source..."
+        tar axvf "$SOURCE/freetype-2.6.5.tar.bz2" || bail "FreeType2 extraction"
     fi
-    
+
     log_status "Finished installing prerequisites, attempting to install FontForge!"
     # fontforge
     if (( ! $appveyor )) && [ ! -d fontforge ]; then
@@ -550,7 +555,7 @@ if (( ! $nomake )); then
         # windows-cross-compile to disable check for libuuid
         #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
         #LIBS="${LIBS} -lmsvcr100" \
-        
+
         PYTHON=$PYINST \
         ./configure $HOST \
             --enable-shared \
@@ -558,7 +563,7 @@ if (( ! $nomake )); then
             --enable-gdk \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.6.3" \
+            --with-freetype-source="$WORK/freetype-2.6.5" \
             --without-libreadline \
             || bail "FontForge configure"
         touch fontforge.configure-complete
