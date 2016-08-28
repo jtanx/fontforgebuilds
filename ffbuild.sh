@@ -556,6 +556,8 @@ if (( ! $nomake )); then
         #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
         #LIBS="${LIBS} -lmsvcr100" \
 
+        # gdi32 linking is needed for AddFontResourceEx
+        LIBS="${LIBS} -lgdi32" \
         PYTHON=$PYINST \
         ./configure $HOST \
             --enable-shared \
