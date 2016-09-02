@@ -240,7 +240,8 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
         # Install MinGW related stuff
         pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
     else
-        pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool}
+        pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool,gtk3}
+        pacman -Rdd --noconfirm $PMPREFIX-{cairo,pango}
     fi
 
     ## Other libs
@@ -463,6 +464,7 @@ if (( ! $nomake )) && (( ! $precompiled_pango_cairo )); then
 
     #log_status "Installing Gtk..."
     #install_source gtk+-3.20.2.tar.xz "" "--enable-win32-backend --enable-shared --enable-introspection --enable-broadway-backend --disable-cups --disable-x11-backend --with-included-immodules --enable-silent-rules"
+    #install_source gtk+-2.24.30.tar.xz "" "--enable-win32-backend --enable-shared --enable-introspection --enable-broadway-backend --disable-cups --disable-x11-backend --with-included-immodules --enable-silent-rules"
 fi
 
 cd $WORK
