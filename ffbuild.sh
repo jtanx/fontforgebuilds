@@ -534,7 +534,8 @@ if (( ! $nomake )); then
     # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
     if [ ! -d gnulib ]; then
         log_status "Cloning gnulib..."
-        git clone --depth 10 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
+        git clone --depth 100 git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
+        (pushd gnulib && git checkout 73affcd234bd83a5d8635362db5b483569e9b0f4 && popd) || bail "Could not checkout Windows compatible revision of gnulib"
     fi
 
     #git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
