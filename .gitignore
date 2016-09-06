@@ -16,6 +16,7 @@ ui-fonts/*
 
 .building-mingw32
 .building-mingw64
+.building-gdk
 .pacman-mingw32-installed
 .pacman-mingw64-installed
 log*.txt

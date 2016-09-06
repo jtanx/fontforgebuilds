@@ -20,14 +20,18 @@ set "PATH=%FF%;%FF%\bin;%PATH:"=%"
 set FF_PATH_ADDED=TRUE
 )
 
-"%FF%\bin\VcXsrv_util.exe" -exists || (
-start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :%FF_XPORT% -multiwindow -clipboard -silent-dup-error
-)
+if exist "%FF%\bin\VcXsrv_util.exe" (
+    "%FF%\bin\VcXsrv_util.exe" -exists || (
+        start /B "" "%FF%\bin\VcXsrv\vcxsrv.exe" :%FF_XPORT% -multiwindow -clipboard -silent-dup-error
+    )
 
-"%FF%\bin\VcXsrv_util.exe" -wait
+    "%FF%\bin\VcXsrv_util.exe" -wait
+)
 
 "%FF%\bin\fontforge.exe" -nosplash %*
 
-"%FF%\bin\VcXsrv_util.exe" -close
+if exist "%FF%\bin\VcXsrv_util.exe" (
+    "%FF%\bin\VcXsrv_util.exe" -close
+)
 :: bye
 

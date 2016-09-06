@@ -11,6 +11,7 @@ nomake=0
 yes=0
 makedebug=0
 appveyor=0
+withgdk=0
 depsonly=0
 depsfromscratch=0
 precompiled_pango_cairo=0
@@ -25,6 +26,7 @@ function dohelp() {
     echo "  -d, --makedebug    Adds in debugging utilities into the build (adds a gdb"
     echo "                     automation script)"
     echo "  -a, --appveyor     AppVeyor specific settings (in-source build)"
+    echo "  -g, --enable-gdk   Build FontForge using the GDK backend."
     echo "  -l, --depsonly     Only install the dependencies and not FontForge itself."
     echo "  -s, --depsfromscratch Builds all X11 libraries, libspiro and libuninameslist"
     echo "                        from source. Useful only for debugging these libraries."
@@ -84,7 +86,7 @@ function detect_arch_switch () {
 log_note "MSYS2 FontForge build script..."
 
 # Retrieve input arguments to script
-optspec=":hrnydalsp-:"
+optspec=":hrnydaglsp-:"
 while getopts "$optspec" optchar; do
     case "${optchar}" in
         -)
@@ -97,6 +99,8 @@ while getopts "$optspec" optchar; do
                     makedebug=$((1-makedebug)) ;;
                 appveyor)
                     appveyor=$((1-appveyor)) ;;
+                enable-gdk)
+                    withgdk=$((1-withgdk)) ;;
                 depsonly)
                     depsonly=$((1-depsonly)) ;;
                 depsfromscratch)
@@ -119,6 +123,8 @@ while getopts "$optspec" optchar; do
             makedebug=$((1-makedebug)) ;;
         a)
             appveyor=$((1-appveyor)) ;;
+        g)
+            withgdk=$((1-withgdk)) ;;
         l)
             depsonly=$((1-depsonly)) ;;
         s)
@@ -134,6 +140,14 @@ while getopts "$optspec" optchar; do
             dohelp 1 ;;
     esac
 done
+
+# Force GDK building if we've previously set it
+[ -f ".building-gdk" ] && withgdk=1
+if (($withgdk)); then
+    log_status "Building with the GDK backend - remove the file .building-gdk to disable."
+    BACKEND_OPT="--enable-gdk"
+    touch ".building-gdk"
+fi
 
 # Set working folders
 BASE="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
@@ -222,7 +236,7 @@ export LIBS=""
 # Install all the available precompiled binaries
 if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
-    if (( ! $depsfromscratch )) || (($precompiled_pango_cairo)); then
+    if (( ! $withgdk )) && ( (( ! $depsfromscratch )) || (($precompiled_pango_cairo)) ); then
         if ! grep -q fontforgelibs /etc/pacman.conf; then
             log_note "Adding the fontforgelibs repo..."
             echo -ne "\n[fontforgelibs32]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
@@ -242,28 +256,29 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
         # Install MinGW related stuff
         pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
     else
-        pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool,gtk3}
-        pacman -Rdd --noconfirm $PMPREFIX-{cairo,pango}
+        pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool}
     fi
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,openssl}
 
-    if (($precompiled_pango_cairo)); then
-        log_note "Installing precompiled Pango and Cairo libraries..."
-        pacman $IOPTS --force $PMPREFIX-{cairo-x11,pango-x11} || \
-        bail "Install Pango/Cairo dependencies manually"
-    else
-        log_note "Installing vanilla Pango and Cairo libraries..."
-        pacman $IOPTS $PMPREFIX-{cairo,pango} || \
-        bail "Install Pango/Cairo dependencies manually"
-    fi
+    if (( ! $withgdk )); then
+        if (($precompiled_pango_cairo)); then
+            log_note "Installing precompiled Pango and Cairo libraries..."
+            pacman $IOPTS --force $PMPREFIX-{cairo-x11,pango-x11} || \
+            bail "Install Pango/Cairo dependencies manually"
+        else
+            log_note "Installing vanilla Pango and Cairo libraries..."
+            pacman $IOPTS $PMPREFIX-{cairo,pango} || \
+            bail "Install Pango/Cairo dependencies manually"
+        fi
 
-    if (( ! $depsfromscratch )); then
-        log_note "Installing precompiled X11, libspiro and libuninameslist libs..."
-        pacman $IOPTS --force $PMPREFIX-{libx11-git,libxext-git}
-        pacman $IOPTS $PMPREFIX-{libxrender-git,libxft-git}
-        pacman $IOPTS $PMPREFIX-{libspiro-git,libuninameslist-git}
+        if (( ! $depsfromscratch )); then
+            log_note "Installing precompiled X11, libspiro and libuninameslist libs..."
+            pacman $IOPTS --force $PMPREFIX-{libx11-git,libxext-git}
+            pacman $IOPTS $PMPREFIX-{libxrender-git,libxft-git}
+            pacman $IOPTS $PMPREFIX-{libspiro-git,libuninameslist-git}
+        fi
     fi
 
     log_status "Installing precompiled devel libraries..."
@@ -271,6 +286,10 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     # Libraries
     pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2}
     pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz}
+
+    if (($withgdk)); then
+        pacman $IOPTS $PMPREFIX-gtk3
+    fi
 
     touch $PMTEST
     log_note "Finished installing precompiled libraries!"
@@ -401,7 +420,7 @@ function install_git_source () {
 
 }
 
-if (($depsfromscratch)); then
+if (($depsfromscratch)) && (( ! $withgdk )); then
     log_status "Installing custom libraries..."
     install_git_source "http://github.com/fontforge/libspiro" "libspiro" "autoreconf -i && automake --foreign -Wall"
     install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "autoreconf -i && automake --foreign"
@@ -455,7 +474,7 @@ if (($depsfromscratch)); then
 fi
 
 #While MSYS2 ships with Cairo & Pango, they're not built with X11 support.
-if (( ! $nomake )) && (( ! $precompiled_pango_cairo )); then
+if (( ! $nomake )) && (( ! $precompiled_pango_cairo )) && (( ! $withgdk )); then
     log_status "Installing Cairo..."
     #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
     install_source_patch cairo-1.15.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
@@ -478,7 +497,7 @@ cd $WORK
 
 
 # VcXsrv_util
-if [ ! -f VcXsrv_util/VcXsrv_util.complete ]; then
+if (( ! $withgdk )) && [ ! -f VcXsrv_util/VcXsrv_util.complete ]; then
     log_status "Building VcXsrv_util..."
     mkdir -p VcXsrv_util
     cd VcXsrv_util
@@ -567,7 +586,7 @@ if (( ! $nomake )); then
         ./configure $HOST \
             --enable-shared \
             --disable-static \
-            --enable-gdk \
+            $BACKEND_OPT \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
             --with-freetype-source="$WORK/freetype-2.6.5" \
@@ -652,18 +671,21 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     cd ..
 fi
 
-#VcXsrv - Xming replacement
-if [ ! -d $RELEASE/bin/VcXsrv ]; then
-    log_status "Installing VcXsrv..."
-    if [ ! -d VcXsrv ]; then
-        $TAR $BINARY/$VCXSRV || bail "VcXsrv not found!"
+if (( ! $withgdk )); then
+    #VcXsrv - Xming replacement
+    if [ ! -d $RELEASE/bin/VcXsrv ]; then
+        log_status "Installing VcXsrv..."
+        if [ ! -d VcXsrv ]; then
+            $TAR $BINARY/$VCXSRV || bail "VcXsrv not found!"
+        fi
+        cp -rf VcXsrv $RELEASE/bin/
     fi
-    cp -rf VcXsrv $RELEASE/bin/
+
+    log_status "Installing VcXsrv_util..."
+    strip $WORK/VcXsrv_util/VcXsrv_util.exe -so "$RELEASE/bin/VcxSrv_util.exe" \
+        || bail "VcxSrv_util"
 fi
 
-log_status "Installing VcXsrv_util..."
-strip $WORK/VcXsrv_util/VcXsrv_util.exe -so "$RELEASE/bin/VcxSrv_util.exe" \
-    || bail "VcxSrv_util"
 log_status "Installing run_fontforge..."
 objcopy -S --file-alignment 1024 $WORK/run_fontforge/run_fontforge.exe "$RELEASE/run_fontforge.exe" \
     || bail "run_fontforge"
