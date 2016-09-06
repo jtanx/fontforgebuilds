@@ -189,8 +189,10 @@ if (($appveyor)); then
     depsfromscratch=0
     precompiled_pango_cairo=1
     FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
+    TAR="tar axf"
 else
     FFPATH=$WORK/fontforge
+    TAR="tar axvf"
 fi
 
 # Make the output directories
@@ -299,7 +301,7 @@ function install_source_patch () {
     if [ ! -f "$folder/$folder.complete"  ]; then
         log_status "Installing $folder..."
         if [ ! -d "$folder" ]; then
-            tar axvf $SOURCE$file || bail "$folder"
+            $TAR $SOURCE$file || bail "$folder"
         else
             log_note "Sensing incomplete build, re-attempting the build..."
         fi
@@ -509,7 +511,7 @@ if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
     if [ ! -d freetype-2.6.5 ]; then
         log_status "Extracting the FreeType 2.6.5 source..."
-        tar axvf "$SOURCE/freetype-2.6.5.tar.bz2" || bail "FreeType2 extraction"
+        $TAR "$SOURCE/freetype-2.6.5.tar.bz2" || bail "FreeType2 extraction"
     fi
 
     log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -644,7 +646,7 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     cd potrace
 
     if [ ! -d $POTRACE_DIR ]; then
-        tar axvf $BINARY/$POTRACE_ARC || bail "Potrace not found!"
+        $TAR $BINARY/$POTRACE_ARC || bail "Potrace not found!"
     fi
     strip $POTRACE_DIR/potrace.exe -so $RELEASE/bin/potrace.exe
     cd ..
@@ -654,7 +656,7 @@ fi
 if [ ! -d $RELEASE/bin/VcXsrv ]; then
     log_status "Installing VcXsrv..."
     if [ ! -d VcXsrv ]; then
-        tar axvf $BINARY/$VCXSRV || bail "VcXsrv not found!"
+        $TAR $BINARY/$VCXSRV || bail "VcXsrv not found!"
     fi
     cp -rf VcXsrv $RELEASE/bin/
 fi
@@ -695,7 +697,7 @@ if [ -d "$RELEASE/lib/$PYVER" ]; then
 else
     if [ ! -d "$BINARY/$PYVER" ]; then
         log_note "Python folder not found - running 'strip-python'..."
-        $BASE/strip-python.sh
+        $BASE/strip-python.sh > /dev/null
     fi
     cp -r "$BINARY/$PYVER" "$RELEASE/lib" || bail "Python folder could not be copied"
 fi
