@@ -147,7 +147,7 @@ done
 
 # Force GDK building if we've previously set it unless explicitly stated not to
 [ -f ".building-gdk" ] && withgdk=1
-if (($withoutgdk)); then
+if (($withoutgdk)) || (( ! $withgdk )); then
     log_status "Building without the GDK backend (using X11 instead)."
     withgdk=0
     rm -f ".building-gdk"
