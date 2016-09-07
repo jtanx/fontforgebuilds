@@ -12,6 +12,7 @@ yes=0
 makedebug=0
 appveyor=0
 withgdk=0
+withoutgdk=0
 depsonly=0
 depsfromscratch=0
 precompiled_pango_cairo=0
@@ -27,6 +28,7 @@ function dohelp() {
     echo "                     automation script)"
     echo "  -a, --appveyor     AppVeyor specific settings (in-source build)"
     echo "  -g, --enable-gdk   Build FontForge using the GDK backend."
+    echo "  --disable-gdk      Build FontForge without the GDK backend."
     echo "  -l, --depsonly     Only install the dependencies and not FontForge itself."
     echo "  -s, --depsfromscratch Builds all X11 libraries, libspiro and libuninameslist"
     echo "                        from source. Useful only for debugging these libraries."
@@ -101,6 +103,8 @@ while getopts "$optspec" optchar; do
                     appveyor=$((1-appveyor)) ;;
                 enable-gdk)
                     withgdk=$((1-withgdk)) ;;
+                disable-gdk)
+                    withoutgdk=$((1-withoutgdk)) ;;
                 depsonly)
                     depsonly=$((1-depsonly)) ;;
                 depsfromscratch)
@@ -141,10 +145,14 @@ while getopts "$optspec" optchar; do
     esac
 done
 
-# Force GDK building if we've previously set it
+# Force GDK building if we've previously set it unless explicitly stated not to
 [ -f ".building-gdk" ] && withgdk=1
-if (($withgdk)); then
-    log_status "Building with the GDK backend - remove the file .building-gdk to disable."
+if (($withoutgdk)); then
+    log_status "Building without the GDK backend (using X11 instead)."
+    withgdk=0
+    rm -f ".building-gdk"
+elif (($withgdk)); then
+    log_status "Building with the GDK backend - remove the file .building-gdk or pass --disable-gdk to disable."
     BACKEND_OPT="--enable-gdk"
     touch ".building-gdk"
 fi
@@ -236,15 +244,17 @@ export LIBS=""
 # Install all the available precompiled binaries
 if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
-    if (( ! $withgdk )) && ( (( ! $depsfromscratch )) || (($precompiled_pango_cairo)) ); then
+    if (( ! $depsfromscratch )) || (($precompiled_pango_cairo)); then
         if ! grep -q fontforgelibs /etc/pacman.conf; then
             log_note "Adding the fontforgelibs repo..."
             echo -ne "\n[fontforgelibs32]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs32\n" >> /etc/pacman.conf
             echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
             echo -ne "[fontforgelibs64]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs64\n" >> /etc/pacman.conf
             echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
-            pacman-key -r 90F90C4A
-            pacman-key --lsign-key 90F90C4A
+            # This option has the tendency to fail depending on the server it connects to.
+            # Retry up to 5 times before falling over.
+            for i in {1..5}; do pacman-key -r 90F90C4A && break || sleep 1; done
+            pacman-key --lsign-key 90F90C4A || bail "Could not add fontforgelibs signing key"
         fi
     fi
     pacman -Sy --noconfirm
@@ -276,11 +286,15 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
         fi
 
         if (( ! $depsfromscratch )); then
-            log_note "Installing precompiled X11, libspiro and libuninameslist libs..."
+            log_note "Installing precompiled X11..."
             pacman $IOPTS --force $PMPREFIX-{libx11-git,libxext-git}
             pacman $IOPTS $PMPREFIX-{libxrender-git,libxft-git}
-            pacman $IOPTS $PMPREFIX-{libspiro-git,libuninameslist-git}
         fi
+    fi
+
+    if (( ! $depsfromscratch )); then
+        log_note "Installing precompiled libspiro and libuninameslist..."
+        pacman $IOPTS $PMPREFIX-{libspiro-git,libuninameslist-git}
     fi
 
     log_status "Installing precompiled devel libraries..."
@@ -422,11 +436,13 @@ function install_git_source () {
 
 }
 
-if (($depsfromscratch)) && (( ! $withgdk )); then
+if (($depsfromscratch)); then
     log_status "Installing custom libraries..."
     install_git_source "http://github.com/fontforge/libspiro" "libspiro" "autoreconf -i && automake --foreign -Wall"
     install_git_source "http://github.com/fontforge/libuninameslist" "libuninameslist" "autoreconf -i && automake --foreign"
+fi
 
+if (($depsfromscratch)) && (( ! $withgdk )); then
     # X11 libraries
     log_status "Installing X11 libraries..."
 
