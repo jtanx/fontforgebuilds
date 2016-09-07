@@ -239,8 +239,10 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     if (( ! $withgdk )) && ( (( ! $depsfromscratch )) || (($precompiled_pango_cairo)) ); then
         if ! grep -q fontforgelibs /etc/pacman.conf; then
             log_note "Adding the fontforgelibs repo..."
-            echo -ne "\n[fontforgelibs32]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
-            echo -ne "[fontforgelibs64]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
+            echo -ne "\n[fontforgelibs32]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs32\n" >> /etc/pacman.conf
+            echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
+            echo -ne "[fontforgelibs64]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs64\n" >> /etc/pacman.conf
+            echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
             pacman-key -r 90F90C4A
             pacman-key --lsign-key 90F90C4A
         fi
