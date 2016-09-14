@@ -102,7 +102,18 @@ while getopts "$optspec" optchar; do
                 appveyor)
                     appveyor=$((1-appveyor)) ;;
                 enable-gdk)
-                    withgdk=$((1-withgdk)) ;;
+                    withgdk=$((1-withgdk))
+                    if (($withgdk)); then
+                        BACKEND_OPT=--enable-gdk
+                    else
+                        unset BACKEND_OPT
+                    fi ;;
+                enable-gdk=gdk2)
+                    BACKEND_OPT=--enable-gdk=gdk2
+                    withgdk=1 ;;
+                enable-gdk=gdk3)
+                    BACKEND_OPT=--enable-gdk=gdk3
+                    withgdk=1 ;;
                 disable-gdk)
                     withoutgdk=$((1-withoutgdk)) ;;
                 depsonly)
@@ -153,8 +164,17 @@ if (($withoutgdk)) || (( ! $withgdk )); then
     rm -f ".building-gdk"
 elif (($withgdk)); then
     log_status "Building with the GDK backend - remove the file .building-gdk or pass --disable-gdk to disable."
-    BACKEND_OPT="--enable-gdk"
-    touch ".building-gdk"
+    if [ -z "$BACKEND_OPT" ]; then
+        BACKEND_OPT=`cat .building-gdk`
+        if [ -z "$BACKEND_OPT" ]; then
+            log_error ".building-gdk was empty, assuming --enable-gdk as GDK build flag!"
+            BACKEND_OPT=--enable-gdk
+            echo $BACKEND_OPT > .building-gdk
+        fi
+    else
+        echo $BACKEND_OPT > .building-gdk
+    fi
+    log_status "GDK Build flag: $BACKEND_OPT"
 fi
 
 # Set working folders
@@ -304,7 +324,11 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz}
 
     if (($withgdk)); then
-        pacman $IOPTS $PMPREFIX-gtk3
+        if [[ $BACKEND_OPT == *"gdk2"* ]]; then
+            pacman $IOPTS $PMPREFIX-gtk2
+        else
+            pacman $IOPTS $PMPREFIX-gtk3
+        fi
     fi
 
     touch $PMTEST
