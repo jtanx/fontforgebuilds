@@ -1,3 +1,6 @@
+14/09/16:
+* Updated application icons (finally)
+  You may need to clear your icon cache for it to take effect.
 13-08-16:
 * Sync with git master (prerelease)
 07-04-16:
