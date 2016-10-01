@@ -1,3 +1,7 @@
+01/10/16:
+* Sync with the 20161001 release.
+23/09/16:
+* Also bundle ssleay32.dll for the Python ssl module.
 14/09/16:
 * Updated application icons (finally)
   You may need to clear your icon cache for it to take effect.
