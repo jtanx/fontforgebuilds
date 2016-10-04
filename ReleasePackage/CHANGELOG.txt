@@ -1,5 +1,5 @@
-01/10/16:
-* Sync with the 20161001 release.
+04/10/16:
+* Sync with the 20161005 release.
 * Upgrade to Freetype 2.7.
 23/09/16:
 * Also bundle ssleay32.dll for the Python ssl module.
