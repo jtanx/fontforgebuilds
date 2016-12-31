@@ -570,9 +570,9 @@ fi
 
 if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
-    if [ ! -d freetype-2.7 ]; then
+    if [ ! -d freetype-2.7.1 ]; then
         log_status "Extracting the FreeType 2.7 source..."
-        $TAR "$SOURCE/freetype-2.7.tar.bz2" || bail "FreeType2 extraction"
+        $TAR "$SOURCE/freetype-2.7.1.tar.bz2" || bail "FreeType2 extraction"
     fi
 
     log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -631,7 +631,7 @@ if (( ! $nomake )); then
             $BACKEND_OPT \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.7" \
+            --with-freetype-source="$WORK/freetype-2.7.1" \
             --without-libreadline \
             || bail "FontForge configure"
         touch fontforge.configure-complete
