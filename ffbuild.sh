@@ -253,7 +253,7 @@ mkdir -p "$TARGET/share"
 export PATH="$TARGET/bin:$PATH"
 export PKG_CONFIG_PATH="$TARGET/share/pkgconfig:$TARGET/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
 # aclocal path
-export ACLOCAL="/bin/aclocal -I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
+export ACLOCAL="/bin/aclocal -I m4 -I $TARGET/share/aclocal -I /$MINGVER/share/aclocal"
 export M4="/bin/m4"
 # Compiler flags
 export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib"
