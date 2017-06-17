@@ -1,3 +1,8 @@
+17/06/17:
+* Upgrade to Freetype 2.8
+* Upgrade to Cairo 1.15.6
+* Upgrade to Pango 1.14.6
+* Rebuild all X11 dependencies from git master
 13/10/16:
 * Minor release to fix some crashes (20161012 release)
 04/10/16:

@@ -1,7 +1,7 @@
 Place the following files in this folder:
-cairo-1.15.2.tar.xz: http://cairographics.org/releases/
-freetype-2.6.3.tar.bz2: https://sourceforge.net/projects/freetype/files/freetype2/
-pango-1.40.0.tar.xz: http://ftp.gnome.org/pub/gnome/sources/pango/
+cairo-1.15.6.tar.xz: http://cairographics.org/releases/
+freetype-2.8.tar.bz2: https://sourceforge.net/projects/freetype/files/freetype2/
+pango-1.40.6.tar.xz: http://ftp.gnome.org/pub/gnome/sources/pango/
 
 ===============================================================================
 

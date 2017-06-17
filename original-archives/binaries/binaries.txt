@@ -1,3 +1,3 @@
 The required binaries can be downloaded from the following location:
-potrace-1.13.win32.tar.gz: http://potrace.sourceforge.net/#downloading
+potrace-1.14.win32.tar.gz: http://potrace.sourceforge.net/#downloading
 VcXsrv-1.14.2-minimal.tar.bz2: https://sourceforge.net/projects/fontforgebuilds/files/build-system-extras/

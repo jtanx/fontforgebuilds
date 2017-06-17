@@ -198,7 +198,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     PYINST=python2
     PYVER=python2.7
     VCXSRV="VcXsrv-1.14.2-minimal.tar.xz"
-    POTRACE_DIR="potrace-1.13.win32"
+    POTRACE_DIR="potrace-1.14.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
 
@@ -210,7 +210,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     PYINST=python3
     PYVER=python3.5
     VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
-    POTRACE_DIR="potrace-1.13.win64"
+    POTRACE_DIR="potrace-1.14.win64"
 else
     bail "Unknown build system!"
 fi
@@ -258,7 +258,7 @@ export ACLOCAL="/bin/aclocal"
 export M4="/bin/m4"
 # Compiler flags
 export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib"
-export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
+export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g -Wall"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
 
@@ -520,11 +520,11 @@ fi
 if (( ! $nomake )) && (( ! $precompiled_pango_cairo )) && (( ! $withgdk )); then
     log_status "Installing Cairo..."
     #Workaround for MSYS2 mingw-w64 removing ctime_r from pthread.h
-    install_source_patch cairo-1.15.2.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
+    install_source_patch cairo-1.15.6.tar.xz "" "cairo.patch" "autoreconf -fiv" "CFLAGS=-D_POSIX --enable-xlib --enable-xcb --enable-xlib-xcb --enable-xlib-xrender --disable-xcb-shm --disable-pdf --disable-svg "
 
     # Download from http://ftp.gnome.org/pub/gnome/sources/pango
     log_status "Installing Pango..."
-    install_source pango-1.40.0.tar.xz "" "--with-xft --with-cairo"
+    install_source pango-1.40.6.tar.xz "" "--with-xft --with-cairo"
 
     #log_status "Installing Gtk..."
     #install_source gtk+-3.20.2.tar.xz "" "--enable-win32-backend --enable-shared --enable-introspection --enable-broadway-backend --disable-cups --disable-x11-backend --with-included-immodules --enable-silent-rules"
@@ -571,9 +571,9 @@ fi
 
 if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
-    if [ ! -d freetype-2.7.1 ]; then
-        log_status "Extracting the FreeType 2.7 source..."
-        $TAR "$SOURCE/freetype-2.7.1.tar.bz2" || bail "FreeType2 extraction"
+    if [ ! -d freetype-2.8 ]; then
+        log_status "Extracting the FreeType 2.8 source..."
+        $TAR "$SOURCE/freetype-2.8.tar.bz2" || bail "FreeType2 extraction"
     fi
 
     log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -627,12 +627,12 @@ if (( ! $nomake )); then
         LIBS="${LIBS} -lgdi32" \
         PYTHON=$PYINST \
         ./configure $HOST \
+            --enable-static \
             --enable-shared \
-            --disable-static \
             $BACKEND_OPT \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.7.1" \
+            --with-freetype-source="$WORK/freetype-2.8" \
             --without-libreadline \
             || bail "FontForge configure"
         touch fontforge.configure-complete
@@ -670,15 +670,16 @@ fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" \
 `
 
 log_status "Copying the FontForge executable..."
-strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
+#strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
+cp "$ffex" "$RELEASE/bin/fontforge.exe"
 objcopy --only-keep-debug "$ffex" "$DBSYMBOLS/fontforge.debug"
 objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge.exe"
 log_status "Copying the libraries required by FontForge..."
 for f in $fflibs; do
     filename="$(basename $f)"
     filenoext="${filename%.*}"
-    strip "$f" -so "$RELEASE/bin/$filename"
-    #cp "$f" "$RELEASE/bin/"
+    #strip "$f" -so "$RELEASE/bin/$filename"
+    cp "$f" "$RELEASE/bin/"
     if [ -f "$TARGET/bin/$filename" ]; then
         #Only create debug files for the ones we compiled!
         objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
