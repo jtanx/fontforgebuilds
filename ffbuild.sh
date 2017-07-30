@@ -258,7 +258,7 @@ export ACLOCAL="/bin/aclocal"
 export M4="/bin/m4"
 # Compiler flags
 export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib"
-export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g -Wall"
+export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
 
@@ -524,7 +524,7 @@ if (( ! $nomake )) && (( ! $precompiled_pango_cairo )) && (( ! $withgdk )); then
 
     # Download from http://ftp.gnome.org/pub/gnome/sources/pango
     log_status "Installing Pango..."
-    install_source pango-1.40.6.tar.xz "" "--with-xft --with-cairo"
+    install_source pango-1.40.7.tar.xz "" "--with-xft --with-cairo"
 
     #log_status "Installing Gtk..."
     #install_source gtk+-3.20.2.tar.xz "" "--enable-win32-backend --enable-shared --enable-introspection --enable-broadway-backend --disable-cups --disable-x11-backend --with-included-immodules --enable-silent-rules"
@@ -604,7 +604,7 @@ if (( ! $nomake )); then
 
     #git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
     #if [ $? -eq 0 ]; then
-    #    log_status "Patching the gnulib..."
+    #    log_status "Patching gnulib..."
     #    git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
     #    rm -f fontforge.configure-complete configure
     #    log_note "Patch applied."
@@ -678,8 +678,8 @@ log_status "Copying the libraries required by FontForge..."
 for f in $fflibs; do
     filename="$(basename $f)"
     filenoext="${filename%.*}"
-    #strip "$f" -so "$RELEASE/bin/$filename"
-    cp "$f" "$RELEASE/bin/"
+    strip "$f" -so "$RELEASE/bin/$filename"
+    #cp "$f" "$RELEASE/bin/"
     if [ -f "$TARGET/bin/$filename" ]; then
         #Only create debug files for the ones we compiled!
         objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
