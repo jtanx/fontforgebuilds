@@ -13,6 +13,7 @@ ReleasePackage/ffdebugscript.txt
 ReleasePackage/fontforge-debug.bat
 fontforge-setup/*.exe
 ui-fonts/*
+patches/*.aps
 
 .building-mingw32
 .building-mingw64

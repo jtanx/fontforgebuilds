@@ -43,7 +43,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, PWSTR lpCmdLine, int nCmdS
 
 	//Construct the parameters to pass to cmd.exe
 	*pwszTail = L'\0';
-	dwRet = StringCchPrintf(wszCmdArgs, sizeof(wszCmdArgs), L"/c \"\"%s\\fontforge.bat\" %s\"",
+	dwRet = StringCchPrintf(wszCmdArgs, sizeof(wszCmdArgs)/sizeof(wchar_t), L"/c \"\"%s\\fontforge.bat\" %s\"",
 		wszAppPath, lpCmdLine);
 	if (FAILED(dwRet)) {
 		MessageBox(NULL, L"Command parameter is too long.",
@@ -65,7 +65,7 @@ int WINAPI wWinMain(HINSTANCE hInst, HINSTANCE hPrev, PWSTR lpCmdLine, int nCmdS
 		GetExitCodeProcess(pi.hProcess, &dwRet);
 		if (dwRet != 0) {
 			wchar_t buf[100];
-			StringCchPrintf(buf, 100, L"Could not launch FontForge (exit code %d).", (int)dwRet);
+			StringCchPrintf(buf, sizeof(buf)/sizeof(wchar_t), L"Could not launch FontForge (exit code %d).", (int)dwRet);
 			MessageBox(NULL, buf, NULL, MB_OK | MB_ICONEXCLAMATION);
 		}
 	} else {
