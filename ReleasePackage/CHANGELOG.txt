@@ -1,6 +1,6 @@
-01/08/17:
+31/07/17:
 * Upgrade to Pango 1.40.7
-* Sync with the 20170801 release
+* Sync with the 20170731 release
 17/06/17:
 * Upgrade to Freetype 2.8
 * Upgrade to Cairo 1.15.6
