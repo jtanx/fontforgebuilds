@@ -1,3 +1,5 @@
+31/07/17 (r2):
+* Compile run_fontforge with Visual Studio 2015 to avoid antivirus false positives
 31/07/17:
 * Upgrade to Pango 1.40.7
 * Sync with the 20170731 release

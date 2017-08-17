@@ -74,7 +74,7 @@ function detect_arch_switch () {
                     git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
                     rm -rf "$DBSYMBOLS"
                     mkdir -p "$DBSYMBOLS"
-                    break;;
+                    ;;
                 * ) bail "Not overwriting ReleasePackage" ;;
             esac
         fi
@@ -208,7 +208,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
     PMPREFIX="mingw-w64-x86_64"
     PYINST=python3
-    PYVER=python3.5
+    PYVER=python3.6
     VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
     POTRACE_DIR="potrace-1.14.win64"
 else
