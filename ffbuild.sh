@@ -289,6 +289,8 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
         # Install MinGW related stuff
         pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
     else
+        # Upgrade gcc
+        pacman $IOPTS --force --nodeps $PMPREFIX-{gcc,gcc-libs}
         pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool}
     fi
 
