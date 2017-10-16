@@ -232,6 +232,7 @@ if (($appveyor)); then
     precompiled_pango_cairo=1
     FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
     TAR="tar axf"
+    export PYTHONHOME=/$MINGVER
 else
     FFPATH=$WORK/fontforge
     TAR="tar axvf"
@@ -642,6 +643,11 @@ if (( ! $nomake )); then
 
     log_status "Compiling FontForge..."
     make -j$(($(nproc)+1))	|| bail "FontForge make"
+
+    if (($appveyor)); then
+        log_status "Running the test suite..."
+        make check -j$(($(nproc)+1)) || bail "FontForge check"
+    fi
 
     log_status "Installing FontForge..."
     make -j$(($(nproc)+1)) install || bail "FontForge install"
