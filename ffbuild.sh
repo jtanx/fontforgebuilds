@@ -198,7 +198,7 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     PYINST=python2
     PYVER=python2.7
     VCXSRV="VcXsrv-1.14.2-minimal.tar.xz"
-    POTRACE_DIR="potrace-1.14.win32"
+    POTRACE_DIR="potrace-1.15.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
 
@@ -210,7 +210,7 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     PYINST=python3
     PYVER=python3.6
     VCXSRV="VcXsrv-1.17.0.0-x86_64-minimal.tar.xz"
-    POTRACE_DIR="potrace-1.14.win64"
+    POTRACE_DIR="potrace-1.15.win64"
 else
     bail "Unknown build system!"
 fi
@@ -574,9 +574,9 @@ fi
 
 if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
-    if [ ! -d freetype-2.8 ]; then
+    if [ ! -d freetype-2.9 ]; then
         log_status "Extracting the FreeType 2.8 source..."
-        $TAR "$SOURCE/freetype-2.8.tar.bz2" || bail "FreeType2 extraction"
+        $TAR "$SOURCE/freetype-2.9.tar.bz2" || bail "FreeType2 extraction"
     fi
 
     log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -635,7 +635,7 @@ if (( ! $nomake )); then
             $BACKEND_OPT \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.8" \
+            --with-freetype-source="$WORK/freetype-2.9" \
             --without-libreadline \
             || bail "FontForge configure"
         touch fontforge.configure-complete
