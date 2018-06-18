@@ -325,7 +325,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     # Libraries
     pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2}
-    pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz}
+    pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz,woff2}
 
     if (($withgdk)); then
         if [[ $BACKEND_OPT == *"gdk2"* ]]; then
@@ -637,6 +637,8 @@ if (( ! $nomake )); then
             --without-libzmq \
             --with-freetype-source="$WORK/freetype-2.9" \
             --without-libreadline \
+            --enable-fontforge-extras \
+            --enable-woff2 \
             || bail "FontForge configure"
         touch fontforge.configure-complete
     fi
