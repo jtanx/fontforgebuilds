@@ -16,6 +16,7 @@ withoutgdk=0
 depsonly=0
 depsfromscratch=0
 precompiled_pango_cairo=0
+releasemode=0
 
 function dohelp() {
     echo "Usage: `basename $0` [options]"
@@ -36,6 +37,7 @@ function dohelp() {
     echo "                                Cairo that have X11 support. Not recommended"
     echo "                                unless you use MSYS2 only for building"
     echo "                                FontForge and nothing else."
+    echo "  -e, --release      Release mode build (enables gnulib patch)"
     exit $1
 }
 
@@ -122,6 +124,8 @@ while getopts "$optspec" optchar; do
                     depsfromscratch=$((1-depsfromscratch)) ;;
                 precompiled-pango-cairo)
                     precompiled_pango_cairo=$((1-precompiled_pango_cairo)) ;;
+                release)
+                    releasemode=$((1-releasemode)) ;;
                 yes)
                     yes=$((1-yes)) ;;
                 help)
@@ -146,6 +150,8 @@ while getopts "$optspec" optchar; do
             depsfromscratch=$((1-depsfromscratch)) ;;
         p)
             precompiled_pango_cairo=$((1-precompiled_pango_cairo)) ;;
+        e)
+            releasemode=$((1-releasemode)) ;;
         y)
             yes=$((1-yes)) ;;
         h)
@@ -342,6 +348,30 @@ else
     log_note "  Delete '$PMTEST' and run this script again if"
     log_note "  this is not the case."
 fi # pacman installed
+
+FREETYPE_VERSION="$(pacman -Qi $PMPREFIX-freetype | awk '/Version/{print $3}' | cut -d- -f1)"
+FREETYPE_NAME="freetype-${FREETYPE_VERSION}"
+FREETYPE_ARCHIVE="${FREETYPE_NAME}.tar.bz2"
+
+if [ -z "$FREETYPE_VERSION" ]; then
+    bail "Failed to infer the installed FreeType version"
+fi
+
+log_note "Inferred installed FreeType version as $FREETYPE_VERSION"
+
+function get_archive() {
+    local archive=$1
+    local url=$2
+    local url2=$3
+
+    if [ ! -f "$archive" ]; then
+        log_note "$archive does not exist, downloading from $url"
+        wget --tries 4 "$url" -O "$archive" || [ ! -z "$url2" ] && wget --tries 4 "$url2" -O "$archive"
+    fi
+
+    log_note "Extracting from $archive"
+    $TAR "$archive"
+}
 
 # Install from tarball
 # install_source_raw(file, folder_name, patch, custom_configgen, configflags, premakeflags, postmakeflags)
@@ -574,9 +604,11 @@ fi
 
 if (( ! $nomake )); then
     # For the source only; to enable the debugger in FontForge
-    if [ ! -d freetype-2.9 ]; then
-        log_status "Extracting the FreeType 2.8 source..."
-        $TAR "$SOURCE/freetype-2.9.tar.bz2" || bail "FreeType2 extraction"
+    if [ ! -d $FREETYPE_NAME ]; then
+        log_status "Extracting the FreeType $FREETYPE_VERSION source..."
+        get_archive "$SOURCE/$FREETYPE_ARCHIVE" \
+            "http://download.savannah.gnu.org/releases/freetype/$FREETYPE_ARCHIVE" \
+            "https://sourceforge.net/projects/freetype/files/freetype2/${FREETYPE_VERSION}/freetype-${FREETYPE_VERSION}.tar.bz2" || bail "FreeType2 extraction"
     fi
 
     log_status "Finished installing prerequisites, attempting to install FontForge!"
@@ -605,13 +637,20 @@ if (( ! $nomake )); then
             git clone git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
     fi
 
-    #git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
-    #if [ $? -eq 0 ]; then
-    #    log_status "Patching gnulib..."
-    #    git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
-    #    rm -f fontforge.configure-complete configure
-    #    log_note "Patch applied."
-    #fi
+    if (($releasemode)); then
+        log_status "Checking if gnulib should be patched..."
+        git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
+        if [ $? -eq 0 ]; then
+            log_note "Patching gnulib..."
+            git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
+            rm -f fontforge.configure-complete configure
+            log_note "Patch applied."
+        elif (($appveyor)); then
+            bail "Could not patch gnulib from a CI build, is the patch up to date?"
+        else
+            log_note "gnulib appears to already be patched"
+        fi
+    fi
 
     if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
         log_status "Running the configure script..."
@@ -635,7 +674,7 @@ if (( ! $nomake )); then
             $BACKEND_OPT \
             --datarootdir=/usr/share/share_ff \
             --without-libzmq \
-            --with-freetype-source="$WORK/freetype-2.9" \
+            --with-freetype-source="$WORK/$FREETYPE_NAME" \
             --without-libreadline \
             --enable-fontforge-extras \
             --enable-woff2 \
@@ -719,7 +758,7 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     cd potrace
 
     if [ ! -d $POTRACE_DIR ]; then
-        $TAR $BINARY/$POTRACE_ARC || bail "Potrace not found!"
+        get_archive "$BINARY/$POTRACE_ARC" "https://dl.bintray.com/jtanx/fontforgelibs/build-system-extras/${POTRACE_ARC}" || bail "Potrace retrieval"
     fi
     strip $POTRACE_DIR/potrace.exe -so $RELEASE/bin/potrace.exe
     cd ..
@@ -730,7 +769,7 @@ if (( ! $withgdk )); then
     if [ ! -d $RELEASE/bin/VcXsrv ]; then
         log_status "Installing VcXsrv..."
         if [ ! -d VcXsrv ]; then
-            $TAR $BINARY/$VCXSRV || bail "VcXsrv not found!"
+            get_archive "$BINARY/$VCXSRV" "https://dl.bintray.com/jtanx/fontforgelibs/build-system-extras/${VCXSRV}" || bail "VcXsrv retrieval"
         fi
         cp -rf VcXsrv $RELEASE/bin/
     fi
@@ -811,6 +850,11 @@ if (($makedebug)); then
     cp -f "$BINARY/gdb-$ARCHNUM.exe" "$RELEASE/bin/gdb.exe" || bail "Couldn't copy GDB"
     cp -f "$BINARY/wtee.exe" "$RELEASE/bin/" || bail "Couldn't copy wtee"
     cp -rf "$DBSYMBOLS" "$RELEASE/bin/" || bail "Couldn't copy debugging symbols"
+fi
+
+if (($appveyor)) && (($releasemode)); then
+    cd "$BASE/fontforge-setup"
+    iscc -Qp fontforgesetup.iss
 fi
 
 # Might as well auto-generate everything
