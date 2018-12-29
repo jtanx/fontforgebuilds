@@ -835,10 +835,16 @@ cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-pac
 cp -f "/usr/local/lib/python2.7/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Generating the version file..."
+current_date=`date "+%c %z"`
 actual_branch=`git -C $FFPATH rev-parse --abbrev-ref HEAD`
 actual_hash=`git -C $FFPATH rev-parse HEAD`
-version_hash=`git -C $FFPATH rev-parse origin/master`
-current_date=`date "+%c %z"`
+if (($appveyor)); then
+    version_hash=`git -C $FFPATH ls-remote origin master | awk '{ printf $1 }'`
+else
+    version_hash=`git -C $FFPATH rev-parse master`
+fi
+
+
 printf "FontForge Windows build ($ARCHNUM-bit)\r\n$current_date\r\n$actual_hash [$actual_branch]\r\nBased on master: $version_hash\r\n\r\n" > $RELEASE/VERSION.txt
 printf "A copy of the changelog follows.\r\n\r\n" >> $RELEASE/VERSION.txt
 cat $RELEASE/CHANGELOG.txt >> $RELEASE/VERSION.txt
