@@ -366,7 +366,7 @@ function get_archive() {
 
     if [ ! -f "$archive" ]; then
         log_note "$archive does not exist, downloading from $url"
-        wget --tries 4 "$url" -O "$archive" || [ ! -z "$url2" ] && wget --tries 4 "$url2" -O "$archive"
+        wget --tries 4 "$url" -O "$archive" || ([ ! -z "$url2" ] && wget --tries 4 "$url2" -O "$archive")
     fi
 
     log_note "Extracting from $archive"
