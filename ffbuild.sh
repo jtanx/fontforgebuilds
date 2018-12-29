@@ -16,7 +16,7 @@ withoutgdk=0
 depsonly=0
 depsfromscratch=0
 precompiled_pango_cairo=0
-releasemode=0
+releasemode=$(echo "$APPVEYOR_CONFIG_PROD" | sed 's/^$/0/g')
 
 function dohelp() {
     echo "Usage: `basename $0` [options]"
