@@ -81,10 +81,10 @@ Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Fil
 
 [Registry]
 ;Root: HKLM; Subkey: "Software\FontForge"; Flags: uninsdeletekey
-Root: HKCR; Subkey: ".sfd"; ValueType: string; ValueName: ""; ValueData: "FontForgeProject"; Flags: uninsdeletevalue 
+Root: HKCR; Subkey: ".sfd"; ValueType: string; ValueName: ""; ValueData: "FontForgeProject"; Flags: uninsdeletevalue
 Root: HKCR; Subkey: "FontForgeProject"; ValueType: string; ValueName: ""; ValueData: "FontForge Project"; Flags: uninsdeletekey
 Root: HKCR; Subkey: "FontForgeProject\DefaultIcon"; ValueType: string; ValueName: ""; ValueData: "{app}\share\fontforge\sfd-icon.ico"
-Root: HKCR; Subkey: "FontForgeProject\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1""" 
+Root: HKCR; Subkey: "FontForgeProject\shell\open\command"; ValueType: string; ValueName: ""; ValueData: """{app}\{#MyAppExeName}"" ""%1"""
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
@@ -92,7 +92,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 [Code]
 procedure RecursiveDelete(Folder : String; Pattern : String; Extensions : TStringList);
 var
-  SearchPath : String;                             
+  SearchPath : String;
   FilePath : String;
   FindRec : TFindRec;
 begin
@@ -118,7 +118,7 @@ begin
   //Now recursively search any subdirectories
   SearchPath := ExpandConstant(Folder + '\*');
   Log('[Recursive] searching ' + SearchPath);
-  if FindFirst(SearchPath, FindRec) then begin 
+  if FindFirst(SearchPath, FindRec) then begin
       try
         repeat
           if ((FindRec.Attributes and FILE_ATTRIBUTE_DIRECTORY) <> 0) and
@@ -151,6 +151,122 @@ begin
     ExtensionsToDelete.Add('.pyo');
     RecursiveDelete('{app}\lib\python2.7', '*.py*', ExtensionsToDelete);
     ExtensionsToDelete.Free;
+  end;
+end;
+
+
+/////////////////////////////////////////////////////////////////////
+function StrSplit(Text: String; Separator: String): TArrayOfString;
+var
+  i, p: Integer;
+  Dest: TArrayOfString;
+begin
+  i := 0;
+  repeat
+    SetArrayLength(Dest, i+1);
+    p := Pos(Separator,Text);
+    if p > 0 then begin
+      Dest[i] := Copy(Text, 1, p-1);
+      Text := Copy(Text, p + Length(Separator), Length(Text));
+      i := i + 1;
+    end else begin
+      Dest[i] := Text;
+      Text := '';
+    end;
+  until Length(Text)=0;
+  Result := Dest
+end;
+
+function GetUninstallString(): String;
+var
+  sUnInstKey: Integer;
+  sUnInstPath: String;
+  sUnInstallString: String;
+  sUnInstallVersion: String;
+  aUnInstallVersionParts: TArrayOfString;
+begin
+  sUnInstKey := HKLM;
+  sUnInstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting("AppId")}_is1');
+  sUnInstallString := '';
+  if not RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString) then begin
+    sUnInstKey := HKCU;
+    RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString);
+  end;
+  if sUninstallString <> '' then
+  begin
+    RegQueryStringValue(sUnInstKey, sUnInstPath, 'DisplayVersion', sUnInstallVersion);
+    aUnInstallVersionParts := StrSplit(sUnInstallVersion, '-');
+
+    // Only force uninstall of pre 2019 (non GDK) builds
+    if (GetArrayLength(aUnInstallVersionParts) = 3) and (CompareText(aUnInstallVersionParts[2], '2017') > 0) then begin
+      sUninstallString := '';
+    end
+  end;
+  Result := sUnInstallString;
+end;
+
+
+/////////////////////////////////////////////////////////////////////
+function IsUpgrade(): Boolean;
+begin
+  Result := (GetUninstallString() <> '');
+end;
+
+
+/////////////////////////////////////////////////////////////////////
+function UnInstallOldVersion(): Integer;
+var
+  sUnInstallString: String;
+  iResultCode: Integer;
+begin
+// Return Values:
+// 1 - uninstall string is empty
+// 2 - error executing the UnInstallString
+// 3 - successfully executed the UnInstallString
+
+  // default return value
+  Result := 0;
+
+  // get the uninstall string of the old app
+  sUnInstallString := GetUninstallString();
+  if sUnInstallString <> '' then begin
+    sUnInstallString := RemoveQuotes(sUnInstallString);
+    if Exec(sUnInstallString, '/SILENT /NORESTART /SUPPRESSMSGBOXES','', SW_HIDE, ewWaitUntilTerminated, iResultCode) then
+      Result := 3
+    else
+      Result := 2;
+  end else
+    Result := 1;
+end;
+
+/////////////////////////////////////////////////////////////////////
+function InitializeSetup(): Boolean;
+var
+  iUninstallOldResult : Integer;
+begin
+  Result := true
+  if (IsUpgrade()) then
+  begin
+    if MsgBox('The previous version of FontForge must be uninstalled first. Continue?', mbConfirmation, MB_YESNO) = IDYES then
+    begin
+      iUninstallOldResult := UnInstallOldVersion();
+      Result := (iUninstallOldResult <> 2);
+    end else
+      Result := False;
+  end;
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if (CurStep=ssInstall) then
+  begin
+    if (IsUpgrade()) then
+    begin
+      if MsgBox('The previous version of FontForge must be uninstalled first. Continue?', mbConfirmation, MB_YESNO) = IDYES then
+        UnInstallOldVersion()
+      else
+        Abort;
+    end;
   end;
 end;
 

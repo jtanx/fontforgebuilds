@@ -1,3 +1,7 @@
+16/03/19:
+* Update to the 20190316 release
+* Switch to using the GDK backend over the X11 backend. VcXsrv has been removed.
+  * For this switch, the old version of FontForge must be installed first.
 31/07/17 (r2):
 * Compile run_fontforge with Visual Studio 2015 to avoid antivirus false positives
 31/07/17:
