@@ -1,3 +1,5 @@
+13/04/19:
+* Update to the 20190413 release
 16/03/19:
 * Update to the 20190316 release
 * Switch to using the GDK backend over the X11 backend. VcXsrv has been removed.
