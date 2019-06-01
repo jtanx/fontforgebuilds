@@ -37,7 +37,7 @@ function dohelp() {
     echo "                                Cairo that have X11 support. Not recommended"
     echo "                                unless you use MSYS2 only for building"
     echo "                                FontForge and nothing else."
-    echo "  -e, --release      Release mode build (enables gnulib patch)"
+    echo "  -e, --release      Release mode build"
     exit $1
 }
 
@@ -630,28 +630,6 @@ if (( ! $nomake )); then
         cd "$FFPATH";
     fi
 
-    # Patch gnulib to fix 64-bit builds and to add Unicode fopen/open support.
-    if [ ! -d gnulib ]; then
-        log_status "Cloning gnulib..."
-        git clone --depth 10 https://github.com/coreutils/gnulib || \
-            git clone git://git.sv.gnu.org/gnulib || bail "Cloning gnulib"
-    fi
-
-    if (($releasemode)); then
-        log_status "Checking if gnulib should be patched..."
-        git -C gnulib apply --check --ignore-whitespace "$PATCH/gnulib.patch" 2>/dev/null
-        if [ $? -eq 0 ]; then
-            log_note "Patching gnulib..."
-            git -C gnulib apply --ignore-whitespace "$PATCH/gnulib.patch" || bail "Git patch failed"
-            rm -f fontforge.configure-complete configure
-            log_note "Patch applied."
-        elif (($appveyor)); then
-            bail "Could not patch gnulib from a CI build, is the patch up to date?"
-        else
-            log_note "gnulib appears to already be patched"
-        fi
-    fi
-
     if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
         log_status "Running the configure script..."
 
@@ -668,7 +646,7 @@ if (( ! $nomake )); then
         # gdi32 linking is needed for AddFontResourceEx
         LIBS="${LIBS} -lgdi32" \
         PYTHON=$PYINST \
-        ./configure $HOST \
+        time ./configure $HOST \
             --enable-static \
             --enable-shared \
             $BACKEND_OPT \
@@ -683,7 +661,7 @@ if (( ! $nomake )); then
     fi
 
     log_status "Compiling FontForge..."
-    make -j$(($(nproc)+1))	|| bail "FontForge make"
+    time make -j$(($(nproc)+1)) || bail "FontForge make"
 
     if (($appveyor)); then
         log_status "Running the test suite..."
