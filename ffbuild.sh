@@ -230,17 +230,16 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     IOPTS="-S --noconfirm --needed"
 
-    if (( ! $appveyor )); then
-        # Install the base MSYS packages needed
-        pacman $IOPTS diffutils findutils make patch tar automake autoconf pkg-config
-
-        # Install MinGW related stuff
-        pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
-    else
+    if (( $appveyor )); then
         # Upgrade gcc
         pacman $IOPTS --force --nodeps $PMPREFIX-{gcc,gcc-libs}
-        pacman $IOPTS $PMPREFIX-{ntldd-git,gettext,libiconv,libtool}
     fi
+
+    # Install the base MSYS packages needed
+    pacman $IOPTS diffutils findutils make patch tar automake autoconf pkg-config
+
+    # Install MinGW related stuff
+    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,openssl}
