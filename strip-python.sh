@@ -2,12 +2,14 @@
 # Copies the Python Lib directory and strips it down to a reasonable size.
 # FontForge essentially ships with its own version of Python
 
-if [ "$MSYSTEM" = "MINGW32" ]; then
-	PYVER=python2.7
-else
-	PYVER=python3.6
-fi
+
+PYVER="$1"
 PYDIR=/$MSYSTEM/lib/$PYVER
+
+if [ -z "$PYVER" ]; then
+    echo "Usage: $0 python-version"
+    exit 1
+fi
 
 cd original-archives/binaries || exit 1
 
@@ -24,4 +26,3 @@ find . -name tests | xargs rm -rfv
 cd ..
 
 cd ../..
-

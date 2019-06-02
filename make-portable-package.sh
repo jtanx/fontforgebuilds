@@ -71,30 +71,19 @@ if [ -z "$FFPATH" ]; then
     FFPATH=$WORK/fontforge
 fi
 
-if [ -f "$BASE/.building-gdk" ]; then
-    backend_type=`cat "$BASE/.building-gdk"`
-    if [[ $backend_type == *"gdk3"* ]]; then
-        backend_type=gdk3
-    else
-        backend_type=gdk2
-    fi
-else
-    backend_type=x11
-fi
-
 version_hash=`git -C $FFPATH rev-parse master -- || git -C $FFPATH rev-parse HEAD --`
 version_hash=${version_hash:0:6}
 log_status "Version hash is $version_hash"
 log_status "Working directory: `pwd`"
 
 log_status "Building the release archive..."
-filename="$PKGPREFIX-$version_hash-$backend_type-$postfix.7z"
+filename="$PKGPREFIX-$version_hash-$postfix.7z"
 log_status "Name is $filename"
 check_overwrite "$filename"
 szip_folder "$filename" "$RELEASE"
 
 log_status "Building the debug archive..."
-debugname="$PKGPREFIX-$version_hash-$backend_type-$postfix-debugging-symbols.7z"
+debugname="$PKGPREFIX-$version_hash-$postfix-debugging-symbols.7z"
 log_status "Name is $debugname"
 check_overwrite "$debugname"
 szip_folder "$debugname" "$DEBUG" "$DEBUG/.debug"

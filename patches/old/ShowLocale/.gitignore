@@ -1,0 +1,9 @@
+Debug/
+Release/
+ShowLocale/Debug/
+ShowLocale/Release/
+*.opensdf
+*.sdf
+*.suo
+*.user
+*.aps

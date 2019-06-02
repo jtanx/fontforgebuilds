@@ -1,8 +1,0 @@
-Debug/
-Release/
-VcXsrv_util/Debug/
-VcXsrv_util/Release/
-*.opensdf
-*.sdf
-*.suo
-*.user
