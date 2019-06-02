@@ -1,7 +1,6 @@
-This is an unofficial build of FontForge.
 Double-click on run_fontforge.exe to start.
 
-For more information, see https://sourceforge.net/p/fontforgebuilds
+For more information, see https://sourceforge.net/p/fontforgebuilds and https://fontforge.github.io
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE

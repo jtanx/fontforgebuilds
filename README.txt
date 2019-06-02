@@ -1,4 +1,4 @@
-An unofficial FontForge build script for Windows.
+A FontForge build script for Windows.
 
 This script was based on Matthew Petroff's work, although it has
 been practically rewritten since.
@@ -21,6 +21,10 @@ See https://sourceforge.net/p/fontforgebuilds/wiki/Using%20the%20build%20script/
 --------------------------------------------------------------------------------
 
 CHANGELOG:
+02/06/19
+* I've removed the previous options to build X11/with the X11 backend.
+  FontForge is now always built with the GDK3 backend. For both the 32 bit
+  and 64 bit builds, FontForge now also uses Python 3 over Python 2.
 01/07/15
 * Another overhaul to use precompiled X11, libspiro and libuninameslist
   libraries by default. This should speed up compiling FontForge from
