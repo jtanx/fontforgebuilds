@@ -266,7 +266,7 @@ if [ -z "$FREETYPE_VERSION" ]; then
 fi
 log_note "Inferred installed FreeType version as $FREETYPE_VERSION"
 
-PYVER="$(pacman -Qi mingw-w64-i686-${PYINST} | awk '/Version/{print $3}' | cut -d- -f1 | cut -d. -f1-2)"
+PYVER="$(pacman -Qi $PMPREFIX-${PYINST} | awk '/Version/{print $3}' | cut -d- -f1 | cut -d. -f1-2)"
 if [ -z "$PYVER" ]; then
     bail "Failed to infer the installed Python version"
 fi
