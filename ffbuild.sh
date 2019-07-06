@@ -260,7 +260,7 @@ fi # pacman installed
 
 FREETYPE_VERSION="$(pacman -Qi $PMPREFIX-freetype | awk '/Version/{print $3}' | cut -d- -f1)"
 FREETYPE_NAME="freetype-${FREETYPE_VERSION}"
-FREETYPE_ARCHIVE="${FREETYPE_NAME}.tar.bz2"
+FREETYPE_ARCHIVE="${FREETYPE_NAME}.tar.xz"
 if [ -z "$FREETYPE_VERSION" ]; then
     bail "Failed to infer the installed FreeType version"
 fi
@@ -276,7 +276,7 @@ log_note "Inferred installed Python version as $PYVER"
 log_status "Retrieving supplementary archives (if necessary)"
 get_archive "$SOURCE/$FREETYPE_ARCHIVE" \
             "http://download.savannah.gnu.org/releases/freetype/$FREETYPE_ARCHIVE" \
-            "https://sourceforge.net/projects/freetype/files/freetype2/${FREETYPE_VERSION}/freetype-${FREETYPE_VERSION}.tar.bz2" || bail "FreeType2 archive retreival"
+            "https://sourceforge.net/projects/freetype/files/freetype2/${FREETYPE_VERSION}/${FREETYPE_ARCHIVE}" || bail "FreeType2 archive retreival"
 get_archive "$BINARY/$POTRACE_ARC" "https://dl.bintray.com/jtanx/fontforgelibs/build-system-extras/${POTRACE_ARC}" || bail "Potrace retrieval"
 
 cd $WORK
