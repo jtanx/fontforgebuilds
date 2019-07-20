@@ -213,18 +213,19 @@ export LIBS=""
 if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     log_status "First time run; installing MSYS and MinGW libraries..."
 
-    # TODO remove this; get libuninameslist into the main repo
-    if ! grep -q fontforgelibs /etc/pacman.conf; then
-        log_note "Adding the fontforgelibs repo..."
-        echo -ne "\n[fontforgelibs32]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs32\n" >> /etc/pacman.conf
-        echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
-        echo -ne "[fontforgelibs64]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs64\n" >> /etc/pacman.conf
-        echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
-        # This option has the tendency to fail depending on the server it connects to.
-        # Retry up to 5 times before falling over.
-        for i in {1..5}; do pacman-key -r 90F90C4A && break || sleep 2; done
-        pacman-key --lsign-key 90F90C4A || bail "Could not add fontforgelibs signing key"
-    fi
+    # No longer necessary, both libuninameslist and libspiro are in the main repo
+    # We also only do gdk builds now
+    #if ! grep -q fontforgelibs /etc/pacman.conf; then
+    #    log_note "Adding the fontforgelibs repo..."
+    #    echo -ne "\n[fontforgelibs32]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs32\n" >> /etc/pacman.conf
+    #    echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
+    #    echo -ne "[fontforgelibs64]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs64\n" >> /etc/pacman.conf
+    #    echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
+    #    # This option has the tendency to fail depending on the server it connects to.
+    #    # Retry up to 5 times before falling over.
+    #    for i in {1..5}; do pacman-key -r 90F90C4A && break || sleep 2; done
+    #    pacman-key --lsign-key 90F90C4A || bail "Could not add fontforgelibs signing key"
+    #fi
 
     pacman -Sy --noconfirm
 
@@ -246,7 +247,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     log_status "Installing precompiled devel libraries..."
     # Libraries
-    pacman $IOPTS $PMPREFIX-{libspiro-git,libuninameslist-git} # TODO mainline these
+    pacman $IOPTS $PMPREFIX-{libspiro,libuninameslist}
     pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2}
     pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz,woff2,gtk3}
 
