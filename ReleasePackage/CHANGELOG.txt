@@ -1,3 +1,5 @@
+01/08/19:
+* Update to the 20190108 release
 02/06/19:
 * Now built with the Python 3 binding
 13/04/19:

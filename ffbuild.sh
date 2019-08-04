@@ -168,7 +168,6 @@ detect_arch_switch $MINGOTHER $MINGVER
 # Common options
 TARGET=$BASE/target/$MINGVER/
 WORK=$BASE/work/$MINGVER/
-HOST="$HOST --prefix $TARGET"
 PMTEST="$BASE/.pacman-$MINGVER-installed"
 POTRACE_ARC="$POTRACE_DIR.tar.gz"
 PYINST=python3
@@ -190,22 +189,17 @@ mkdir -p "$RELEASE/bin"
 mkdir -p "$RELEASE/lib"
 mkdir -p "$RELEASE/share"
 mkdir -p "$DBSYMBOLS"
-mkdir -p "$TARGET/bin"
-mkdir -p "$TARGET/lib/pkgconfig"
-mkdir -p "$TARGET/include"
-mkdir -p "$TARGET/share"
-
 
 # Set pkg-config path to also search mingw libs
 export PATH="$TARGET/bin:$PATH"
-export PKG_CONFIG_PATH="$TARGET/share/pkgconfig:$TARGET/lib/pkgconfig:/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
+export PKG_CONFIG_PATH="/$MINGVER/lib/pkgconfig:/usr/local/lib/pkgconfig:/lib/pkgconfig:/usr/local/share/pkgconfig"
 # aclocal path
-export ACLOCAL_PATH="m4:$TARGET/share/aclocal:/$MINGVER/share/aclocal"
+export ACLOCAL_PATH="m4:/$MINGVER/share/aclocal"
 export ACLOCAL="/bin/aclocal"
 export M4="/bin/m4"
 # Compiler flags
-export LDFLAGS="-L$TARGET/lib -L/$MINGVER/lib -L/usr/local/lib -L/lib"
-export CFLAGS="-DWIN32 -I$TARGET/include -I/$MINGVER/include -I/usr/local/include -I/include -g"
+export LDFLAGS="-L/$MINGVER/lib -L/usr/local/lib -L/lib"
+export CFLAGS="-DWIN32 -I/$MINGVER/include -I/usr/local/include -I/include -g"
 export CPPFLAGS="${CFLAGS}"
 export LIBS=""
 
@@ -237,10 +231,10 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     fi
 
     # Install the base MSYS packages needed
-    pacman $IOPTS diffutils findutils make patch tar automake autoconf pkg-config
+    pacman $IOPTS diffutils findutils make patch tar pkg-config winpty
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool}
+    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool,ninja}
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,openssl}
@@ -324,53 +318,87 @@ if (( ! $nomake )); then
     else
         cd "$FFPATH";
     fi
+    
+    if [ -f CMakeLists.txt ]; then
+        if [ ! -f build/fontforge.configure-complete ] || (($reconfigure)); then
+            log_status "Running the configure script..."
+            
+            if (($appveyor)); then
+                EXTRA_CMAKE_OPTS="-DENABLE_FONTFORGE_EXTRAS=yes"
+            else
+                log_note "Will use ccache when building FontForge"
+                EXTRA_CMAKE_OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache"
+            fi
 
-    if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
-        log_status "Running the configure script..."
+            mkdir -p build && cd build
+            time cmake -GNinja \
+                -DCMAKE_INSTALL_PREFIX="$TARGET" \
+                -DENABLE_FREETYPE_DEBUGGER="$WORK/$FREETYPE_NAME" \
+                -DENABLE_LIBREADLINE=no \
+                $EXTRA_CMAKE_OPTS \
+                .. \
+                || bail "FontForge configure"
+            touch fontforge.configure-complete
+            cd "$FFPATH"
+        fi
+        
+        log_status "Compiling FontForge..."
+        time ninja -C build || bail "FontForge build"
 
-        if [ ! -f configure ]; then
-            log_note "No configure script detected; running ./boostrap..."
-            ./bootstrap --force || bail "FontForge autogen"
+        if (($appveyor)); then
+            log_status "Running the test suite..."
+            CTEST_PARALLEL_LEVEL=100 ninja -C build check || bail "FontForge check"
         fi
 
-        # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
-        # windows-cross-compile to disable check for libuuid
-        #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
-        #LIBS="${LIBS} -lmsvcr100" \
+        log_status "Installing FontForge..."
+        ninja -C build install || bail "FontForge install"
+    else
+        if [ ! -f fontforge.configure-complete ] || (($reconfigure)); then
+            log_status "Running the configure script..."
 
-        # gdi32 linking is needed for AddFontResourceEx
-        LIBS="${LIBS} -lgdi32" \
-        PYTHON=$PYINST \
-        time ./configure $HOST \
-            --enable-static \
-            --enable-shared \
-            --enable-gdk=gdk3 \
-            --datarootdir=/usr/share/share_ff \
-            --with-freetype-source="$WORK/$FREETYPE_NAME" \
-            --without-libreadline \
-            --enable-fontforge-extras \
-            --enable-woff2 \
-            || bail "FontForge configure"
-        touch fontforge.configure-complete
+            if [ ! -f configure ]; then
+                log_note "No configure script detected; running ./boostrap..."
+                ./bootstrap --force || bail "FontForge autogen"
+            fi
+
+            # libreadline is disabled because it causes issues when used from the command line (e.g Ctrl+C doesn't work)
+            # windows-cross-compile to disable check for libuuid
+            #CFLAGS="${CFLAGS} -specs=$BASE/msvcr100.spec" \
+            #LIBS="${LIBS} -lmsvcr100" \
+
+            # gdi32 linking is needed for AddFontResourceEx
+            LIBS="${LIBS} -lgdi32" \
+            PYTHON=$PYINST \
+            time ./configure \
+                --prefix $TARGET \
+                --enable-static \
+                --enable-shared \
+                --enable-gdk=gdk3 \
+                --with-freetype-source="$WORK/$FREETYPE_NAME" \
+                --without-libreadline \
+                --enable-fontforge-extras \
+                --enable-woff2 \
+                || bail "FontForge configure"
+            touch fontforge.configure-complete
+        fi
+
+        log_status "Compiling FontForge..."
+        time make -j$(($(nproc)+1)) || bail "FontForge make"
+
+        if (($appveyor)); then
+            log_status "Running the test suite..."
+            make check -j$(($(nproc)+1)) || bail "FontForge check"
+        fi
+
+        log_status "Installing FontForge..."
+        make -j$(($(nproc)+1)) install || bail "FontForge install"
+        #cd gdraw || bail "cd gdraw"
+        #make -j$(($(nproc)+1))	|| bail "FontForge make"
+        #make install || bail "Gdraw install"
+        #cp "$TARGET/bin/libgdraw-5.dll" "$RELEASE/bin" || bail "Gdraw copy"
+        #log_note "DONE"
+        #exit
     fi
-
-    log_status "Compiling FontForge..."
-    time make -j$(($(nproc)+1)) || bail "FontForge make"
-
-    if (($appveyor)); then
-        log_status "Running the test suite..."
-        make check -j$(($(nproc)+1)) || bail "FontForge check"
-    fi
-
-    log_status "Installing FontForge..."
-    make -j$(($(nproc)+1)) install || bail "FontForge install"
-
-    #cd gdraw || bail "cd gdraw"
-    #make -j$(($(nproc)+1))	|| bail "FontForge make"
-    #make install || bail "Gdraw install"
-    #cp "$TARGET/bin/libgdraw-5.dll" "$RELEASE/bin" || bail "Gdraw copy"
-    #log_note "DONE"
-    #exit
 fi
 
 log_status "Assembling the release package..."
@@ -391,8 +419,8 @@ fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" \
 `
 
 log_status "Copying the FontForge executable..."
-#strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
-cp "$ffex" "$RELEASE/bin/fontforge.exe"
+strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
+#cp "$ffex" "$RELEASE/bin/fontforge.exe"
 objcopy --only-keep-debug "$ffex" "$DBSYMBOLS/fontforge.debug"
 objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge.exe"
 log_status "Copying the libraries required by FontForge..."
@@ -413,8 +441,8 @@ strip "/$MINGVER/bin/gspawn-win$ARCHNUM-helper.exe" -so "$RELEASE/bin/gspawn-win
 strip "/$MINGVER/bin/gspawn-win$ARCHNUM-helper-console.exe" -so "$RELEASE/bin/gspawn-win$ARCHNUM-helper-console.exe" || bail "Glib spawn helper not found!"
 
 log_status "Copying the shared folder of FontForge..."
-cp -rf /usr/share/share_ff/fontforge "$RELEASE/share/"
-cp -rf /usr/share/share_ff/locale "$RELEASE/share/"
+cp -rf $TARGET/share/fontforge "$RELEASE/share/"
+cp -rf $TARGET/share/locale "$RELEASE/share/"
 rm -f "$RELEASE/share/prefs"
 
 log_note "Installing custom binaries..."
@@ -450,7 +478,7 @@ mkdir -p "$RELEASE/share/fonts"
 cp "$UIFONTS"/* "$RELEASE/share/fonts/"
 if [ -z "$(ls -A "$UIFONTS" 2>&1 | grep -v "\\.txt$")" ]; then
     log_note "No UI fonts specified, copying some standard ones..."
-    cp /usr/share/share_ff/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
+    cp $TARGET/share/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
 fi
 
 if [ -f "$PATCH/fontforge.resources" ]; then
@@ -487,10 +515,8 @@ find "$RELEASE/lib/$PYVER" -name "__pycache__" | xargs rm -rfv
 #fi
 
 log_status "Copying the Python extension dlls..."
-cp -f "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/"  || \
-cp -f "/usr/local/lib/python2.7/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
-cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || \
-cp -f "/usr/local/lib/python2.7/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+cp -f "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 
 log_status "Generating the version file..."
 current_date=`date "+%c %z"`
