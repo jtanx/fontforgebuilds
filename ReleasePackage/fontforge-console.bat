@@ -2,9 +2,15 @@
 echo Configuring the system path to add FontForge...
 set FF=%~dp0
 set "PYTHONHOME=%FF%"
-set "PYTHONPATH=%FF%lib\python2.7"
-set "PATH=%FF%;%FF%\bin;%PATH%"
+
+if not defined FF_PATH_ADDED (
+set "PATH=%FF%;%FF%\bin;%PATH:"=%"
 set FF_PATH_ADDED=TRUE
+)
+
+for /F "tokens=* USEBACKQ" %%f IN (`dir /b "%FF%lib\python*"`) do (
+set "PYTHONPATH=%FF%lib\%%f"
+)
 
 echo Configuration complete. You can now call 'fontforge' from the console.
 echo You may also use the bundled Python distribution by calling `ffpython`.

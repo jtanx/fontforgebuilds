@@ -1,3 +1,5 @@
+16/08/19:
+* Cleaned up the batch scripts to work with Python 3, removed VcXsrv remnants
 01/08/19:
 * Update to the 20190108 release
 02/06/19:
