@@ -1,3 +1,5 @@
+23/12/19:
+* Bundle DLLs required by Python lib-dynload (e.g. Tk/sqlite)
 16/08/19:
 * Cleaned up the batch scripts to work with Python 3, removed VcXsrv remnants
 01/08/19:

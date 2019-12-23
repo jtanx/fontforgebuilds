@@ -402,39 +402,6 @@ if (( ! $nomake )); then
 fi
 
 log_status "Assembling the release package..."
-ffex=`which fontforge.exe`
-MSYSROOT=`cygpath -w /`
-FFEXROOT=`cygpath -w $(dirname "${ffex}")`
-log_note "The executable: $ffex"
-log_note "MSYS root: $MSYSROOT"
-log_note "FFEX root: $FFEXROOT"
-
-fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" \
-| grep dll \
-| sed -e '/^[^\t]/ d'  \
-| sed -e 's/\t//'  \
-| sed -e 's/.*=..//'  \
-| sed -e 's/ (0.*)//' \
-| grep -F -e "$MSYSROOT" -e "$FFEXROOT" \
-`
-
-log_status "Copying the FontForge executable..."
-strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
-#cp "$ffex" "$RELEASE/bin/fontforge.exe"
-objcopy --only-keep-debug "$ffex" "$DBSYMBOLS/fontforge.debug"
-objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge.exe"
-log_status "Copying the libraries required by FontForge..."
-for f in $fflibs; do
-    filename="$(basename $f)"
-    filenoext="${filename%.*}"
-    strip "$f" -so "$RELEASE/bin/$filename"
-    #cp "$f" "$RELEASE/bin/"
-    if [ -f "$TARGET/bin/$filename" ]; then
-        #Only create debug files for the ones we compiled!
-        objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
-        objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
-    fi
-done
 
 log_status "Copying glib spawn helpers..."
 strip "/$MINGVER/bin/gspawn-win$ARCHNUM-helper.exe" -so "$RELEASE/bin/gspawn-win$ARCHNUM-helper.exe" || bail "Glib spawn helper not found!"
@@ -517,6 +484,40 @@ find "$RELEASE/lib/$PYVER" -name "__pycache__" | xargs rm -rfv
 log_status "Copying the Python extension dlls..."
 cp -f "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
 cp -f "$TARGET/lib/$PYVER/site-packages/psMat.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
+
+ffex=`which fontforge.exe`
+MSYSROOT=`cygpath -w /`
+FFEXROOT=`cygpath -w $(dirname "${ffex}")`
+log_note "The executable: $ffex"
+log_note "MSYS root: $MSYSROOT"
+log_note "FFEX root: $FFEXROOT"
+
+fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" $RELEASE/lib/$PYVER/lib-dynload/*.dll \
+| grep =.*dll \
+| sed -e '/^[^\t]/ d'  \
+| sed -e 's/\t//'  \
+| sed -e 's/.*=..//'  \
+| sed -e 's/ (0.*)//' \
+| grep -F -e "$MSYSROOT" -e "$FFEXROOT" \
+`
+
+log_status "Copying the FontForge executable..."
+strip "$ffex" -so "$RELEASE/bin/fontforge.exe"
+#cp "$ffex" "$RELEASE/bin/fontforge.exe"
+objcopy --only-keep-debug "$ffex" "$DBSYMBOLS/fontforge.debug"
+objcopy --add-gnu-debuglink="$DBSYMBOLS/fontforge.debug" "$RELEASE/bin/fontforge.exe"
+log_status "Copying the libraries required by FontForge..."
+for f in $fflibs; do
+    filename="$(basename $f)"
+    filenoext="${filename%.*}"
+    strip "$f" -so "$RELEASE/bin/$filename"
+    #cp "$f" "$RELEASE/bin/"
+    if [ -f "$TARGET/bin/$filename" ]; then
+        #Only create debug files for the ones we compiled!
+        objcopy --only-keep-debug "$f" "$DBSYMBOLS/$filenoext.debug"
+        objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
+    fi
+done
 
 log_status "Generating the version file..."
 current_date=`date "+%c %z"`
