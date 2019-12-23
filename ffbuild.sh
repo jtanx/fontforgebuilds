@@ -237,7 +237,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool,ninja}
 
     ## Other libs
-    pacman $IOPTS $PMPREFIX-{$PYINST,openssl}
+    pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip}
 
     log_status "Installing precompiled devel libraries..."
     # Libraries
@@ -459,6 +459,8 @@ cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
 log_status "Copying the Python executable and libraries..."
 # Name the python binary to something custom to avoid clobbering any Python installation that the user already has
 strip "/$MINGVER/bin/$PYINST.exe" -so "$RELEASE/bin/ffpython.exe"
+strip "/$MINGVER/bin/pip.exe" -so "$RELEASE/bin/pip.exe"
+cp "/$MINGVER/bin/pip-script.py" "$RELEASE/bin"
 cd $BASE
 if [ -d "$RELEASE/lib/$PYVER" ]; then
     log_note "Skipping python library copy because folder already exists, and copying is slow."
@@ -474,12 +476,6 @@ cd $WORK
 log_status "Stripping Python cache files (*.pyc,*.pyo,__pycache__)..."
 find "$RELEASE/lib/$PYVER" -regextype sed -regex ".*\.py[co]" | xargs rm -rfv
 find "$RELEASE/lib/$PYVER" -name "__pycache__" | xargs rm -rfv
-
-#if [ "$MSYSTEM" = "MINGW32" ]; then
-#    log_status "Copying OpenSSL libraries (for Python hashlib)..."
-#    strip /$MINGVER/bin/libeay32.dll -so "$RELEASE/bin/libeay32.dll"
-#    strip /$MINGVER/bin/ssleay32.dll -so "$RELEASE/bin/ssleay32.dll"
-#fi
 
 log_status "Copying the Python extension dlls..."
 cp -f "$TARGET/lib/$PYVER/site-packages/fontforge.pyd" "$RELEASE/lib/$PYVER/site-packages/" || bail "Couldn't copy pyhook dlls"
