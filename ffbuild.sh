@@ -227,14 +227,14 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     if (( $appveyor )); then
         # Upgrade gcc
-        pacman $IOPTS --force --nodeps $PMPREFIX-{gcc,gcc-libs}
+        pacman $IOPTS --nodeps $PMPREFIX-{gcc,gcc-libs}
     fi
 
     # Install the base MSYS packages needed
     pacman $IOPTS diffutils findutils make patch tar pkg-config winpty
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,libtool,ninja}
+    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja}
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip}
