@@ -324,7 +324,7 @@ if (( ! $nomake )); then
             log_status "Running the configure script..."
             
             if (($appveyor)); then
-                EXTRA_CMAKE_OPTS="-DENABLE_FONTFORGE_EXTRAS=yes"
+                EXTRA_CMAKE_OPTS="-DENABLE_FONTFORGE_EXTRAS=yes -DENABLE_DOCS=yes -DSPHINX_USE_VENV=yes"
             else
                 log_note "Will use ccache when building FontForge"
                 EXTRA_CMAKE_OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache"

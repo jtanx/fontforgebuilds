@@ -1,3 +1,5 @@
+01/03/20:
+* Resync with latest master in preparation for the next release (a80c6ef)
 23/12/19:
 * Bundle DLLs required by Python lib-dynload (e.g. Tk/sqlite)
 16/08/19:
