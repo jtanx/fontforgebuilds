@@ -471,6 +471,12 @@ else
     fi
     cp -r "$BINARY/$PYVER" "$RELEASE/lib" || bail "Python folder could not be copied"
 fi
+if [ -d "$RELEASE/lib/tcl8.6" ]; then
+    log_note "Skipping copying tcl/tk folder because it already exists"
+else
+    log_status "Copying tcl/tk..."
+    cp -r /$MINGVER/lib/{tcl,tk}8.* "$RELEASE/lib/" ||  bail "Couldn't copy tcl/tk"
+fi
 cd $WORK
 
 log_status "Stripping Python cache files (*.pyc,*.pyo,__pycache__)..."
