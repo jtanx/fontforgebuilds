@@ -234,7 +234,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     pacman $IOPTS diffutils findutils make patch tar pkg-config winpty
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja}
+    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja,ccache}
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip}
