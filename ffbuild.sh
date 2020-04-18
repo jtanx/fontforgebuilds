@@ -226,6 +226,8 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     IOPTS="-S --noconfirm --needed"
 
     if (( $appveyor )); then
+        # Try to fix python issues
+        pacman -Rcns --noconfirm $PMPREFIX-python3
         # Upgrade gcc
         pacman $IOPTS --nodeps $PMPREFIX-{gcc,gcc-libs}
     fi
