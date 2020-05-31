@@ -23,7 +23,6 @@ AppUpdatesURL={#MyAppURL}
 DefaultDirName={pf}\{#MyAppFolder}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
-LicenseFile=Licenses\license.txt
 InfoBeforeFile=..\ReleasePackage\VERSION.txt
 OutputDir=.
 OutputBaseFilename=FontForgeSetup-{#MyAppVersion}
