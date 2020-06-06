@@ -12,18 +12,20 @@ yes=0
 makedebug=0
 appveyor=0
 depsonly=0
+github="fontforge"
 
 function dohelp() {
     echo "Usage: `basename $0` [options]"
-    echo "  -h, --help         Prints this help message"
-    echo "  -r, --reconfigure  Forces the configure script to be rerun for the currently"
-    echo "                     worked-on package."
-    echo "  -n, --nomake       Don't make/make install FontForge but do everything else"
-    echo "  -y, --yes          Say yes to all build script prompts"
-    echo "  -d, --makedebug    Adds in debugging utilities into the build (adds a gdb"
-    echo "                     automation script)"
-    echo "  -a, --appveyor     AppVeyor specific settings (in-source build)"
-    echo "  -l, --depsonly     Only install the dependencies and not FontForge itself."
+    echo "  -h, --help           Prints this help message"
+    echo "  -g, --github <user>  Use forked FontForge repository by github <user>"
+    echo "  -r, --reconfigure    Forces the configure script to be rerun for the currently"
+    echo "                       worked-on package."
+    echo "  -n, --nomake         Don't make/make install FontForge but do everything else"
+    echo "  -y, --yes            Say yes to all build script prompts"
+    echo "  -d, --makedebug      Adds in debugging utilities into the build (adds a gdb"
+    echo "                       automation script)"
+    echo "  -a, --appveyor       AppVeyor specific settings (in-source build)"
+    echo "  -l, --depsonly       Only install the dependencies and not FontForge itself."
     exit $1
 }
 
@@ -87,7 +89,7 @@ function get_archive() {
 log_note "MSYS2 FontForge build script..."
 
 # Retrieve input arguments to script
-optspec=":hrnydal-:"
+optspec=":hrnydalg-:"
 while getopts "$optspec" optchar; do
     case "${optchar}" in
         -)
@@ -104,6 +106,8 @@ while getopts "$optspec" optchar; do
                     depsonly=$((1-depsonly)) ;;
                 yes)
                     yes=$((1-yes)) ;;
+                github)
+                    github="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )) ;;
                 help)
                     dohelp 0;;
                 *)
@@ -122,6 +126,8 @@ while getopts "$optspec" optchar; do
             depsonly=$((1-depsonly)) ;;
         y)
             yes=$((1-yes)) ;;
+        g)
+            github="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )) ;;
         h)
             dohelp 0 ;;
         *)
@@ -236,7 +242,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     pacman $IOPTS diffutils findutils make patch tar pkg-config winpty
 
     # Install MinGW related stuff
-    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja}
+    pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja,ccache}
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip}
@@ -313,14 +319,14 @@ if (( ! $nomake )); then
                 git clean -dxf || bail "Could not clean repository"
                 git reset --hard || bail "Could not reset repository"
             else
-                log_status "Cloning the fontforge repository..."
-                git clone https://github.com/jtanx/fontforge || bail "Cloning fontforge"
+                log_status "Cloning the fontforge repository from https://github.com/$github/fontforge..."
+                git clone "https://github.com/$github/fontforge" || bail "Cloning fontforge"
                 cd "fontforge"
             fi
     else
         cd "$FFPATH";
     fi
-    
+
     if [ -f CMakeLists.txt ]; then
         if [ ! -f build/fontforge.configure-complete ] || (($reconfigure)); then
             log_status "Running the configure script..."
