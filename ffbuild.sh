@@ -12,6 +12,7 @@ yes=0
 makedebug=0
 appveyor=0
 depsonly=0
+github="fontforge"
 
 function dohelp() {
     echo "Usage: `basename $0` [options]"
@@ -87,15 +88,11 @@ function get_archive() {
 # Preamble
 log_note "MSYS2 FontForge build script..."
 
-# Default account for github fonforge repository
-github="fontforge"
-
 # Retrieve input arguments to script
-optspec=":hrnydal-:g:"
+optspec=":hrnydalg-:"
 while getopts "$optspec" optchar; do
     case "${optchar}" in
         -)
-
             case "${OPTARG}" in
                 reconfigure)
                     reconfigure=$((1-reconfigure)) ;;
@@ -108,9 +105,9 @@ while getopts "$optspec" optchar; do
                 depsonly)
                     depsonly=$((1-depsonly)) ;;
                 yes)
-                    yes=$((1-yes)) ;; 
+                    yes=$((1-yes)) ;;
                 github)
-                    github=$(eval "echo \${$OPTIND}"); shift ;;
+                    github="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )) ;;
                 help)
                     dohelp 0;;
                 *)
@@ -128,9 +125,9 @@ while getopts "$optspec" optchar; do
         l)
             depsonly=$((1-depsonly)) ;;
         y)
-            yes=$((1-yes)) ;;    
+            yes=$((1-yes)) ;;
         g)
-            github="${OPTARG}"; ;;
+            github="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )) ;;
         h)
             dohelp 0 ;;
         *)
@@ -320,7 +317,7 @@ if (( ! $nomake )); then
                 git clean -dxf || bail "Could not clean repository"
                 git reset --hard || bail "Could not reset repository"
             else
-                log_status "Cloning the fontforge repository..."
+                log_status "Cloning the fontforge repository from https://github.com/$github/fontforge..."
                 git clone "https://github.com/$github/fontforge" || bail "Cloning fontforge"
                 cd "fontforge"
             fi
