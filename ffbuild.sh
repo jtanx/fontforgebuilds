@@ -332,7 +332,9 @@ if (( ! $nomake )); then
             log_status "Running the configure script..."
             
             if (($appveyor)); then
-                EXTRA_CMAKE_OPTS="-DENABLE_FONTFORGE_EXTRAS=yes -DENABLE_DOCS=yes -DSPHINX_USE_VENV=yes"
+                log_note "Ensuring sphinx is present..."
+                pip install sphinx typing # workaround for https://github.com/msys2/MINGW-packages/issues/7227
+                EXTRA_CMAKE_OPTS="-DENABLE_FONTFORGE_EXTRAS=yes -DENABLE_DOCS=yes"
             else
                 log_note "Will use ccache when building FontForge"
                 EXTRA_CMAKE_OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache"
