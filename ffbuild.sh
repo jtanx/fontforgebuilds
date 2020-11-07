@@ -469,8 +469,6 @@ cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
 log_status "Copying the Python executable and libraries..."
 # Name the python binary to something custom to avoid clobbering any Python installation that the user already has
 strip "/$MINGVER/bin/$PYINST.exe" -so "$RELEASE/bin/ffpython.exe"
-strip "/$MINGVER/bin/pip.exe" -so "$RELEASE/bin/pip.exe"
-cp "/$MINGVER/bin/pip-script.py" "$RELEASE/bin"
 cd $BASE
 if [ -d "$RELEASE/lib/$PYVER" ]; then
     log_note "Skipping python library copy because folder already exists, and copying is slow."
