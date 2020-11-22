@@ -8,6 +8,18 @@
 #define MyAppURL "http://www.fontforge.org"
 #define MyAppExeName "run_fontforge.exe"
 
+#ifdef MSYSTEM
+# if MSYSTEM == "MINGW64"
+#  define ARCH="x64"
+#  define ARCHDESC="x64"
+#  define MyAppName "FontForge (64-bit)"
+# endif
+#endif
+#ifndef ARCH
+# define ARCH=""
+# define ARCHDESC="x86"
+#endif
+
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
@@ -20,12 +32,13 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppFolder}
+ArchitecturesInstallIn64BitMode={#ARCH}
+DefaultDirName={commonpf}\{#MyAppFolder}
 DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 InfoBeforeFile=..\ReleasePackage\VERSION.txt
 OutputDir=.
-OutputBaseFilename=FontForgeSetup-{#MyAppVersion}
+OutputBaseFilename=FontForgeSetup-{#MyAppVersion}-{#ARCHDESC}
 SetupIconFile=Graphics\fontforge-installer-icon.ico
 ;WizardImageFile=Graphics\fontforge-wizard.bmp
 WizardSmallImageFile=Graphics\fontforge-wizard.bmp
@@ -36,6 +49,7 @@ PrivilegesRequired=poweruser
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "armenian"; MessagesFile: "compiler:Languages\Armenian.isl"
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
 Name: "catalan"; MessagesFile: "compiler:Languages\Catalan.isl"
 Name: "corsican"; MessagesFile: "compiler:Languages\Corsican.isl"
@@ -45,20 +59,18 @@ Name: "dutch"; MessagesFile: "compiler:Languages\Dutch.isl"
 Name: "finnish"; MessagesFile: "compiler:Languages\Finnish.isl"
 Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Name: "german"; MessagesFile: "compiler:Languages\German.isl"
-Name: "greek"; MessagesFile: "compiler:Languages\Greek.isl"
 Name: "hebrew"; MessagesFile: "compiler:Languages\Hebrew.isl"
-Name: "hungarian"; MessagesFile: "compiler:Languages\Hungarian.isl"
+Name: "icelandic"; MessagesFile: "compiler:Languages\Icelandic.isl"
 Name: "italian"; MessagesFile: "compiler:Languages\Italian.isl"
 Name: "japanese"; MessagesFile: "compiler:Languages\Japanese.isl"
-Name: "nepali"; MessagesFile: "compiler:Languages\Nepali.islu"
 Name: "norwegian"; MessagesFile: "compiler:Languages\Norwegian.isl"
 Name: "polish"; MessagesFile: "compiler:Languages\Polish.isl"
 Name: "portuguese"; MessagesFile: "compiler:Languages\Portuguese.isl"
 Name: "russian"; MessagesFile: "compiler:Languages\Russian.isl"
-Name: "serbiancyrillic"; MessagesFile: "compiler:Languages\SerbianCyrillic.isl"
-Name: "serbianlatin"; MessagesFile: "compiler:Languages\SerbianLatin.isl"
+Name: "slovak"; MessagesFile: "compiler:Languages\Slovak.isl"
 Name: "slovenian"; MessagesFile: "compiler:Languages\Slovenian.isl"
 Name: "spanish"; MessagesFile: "compiler:Languages\Spanish.isl"
+Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "ukrainian"; MessagesFile: "compiler:Languages\Ukrainian.isl"
 
 [Tasks]
@@ -76,7 +88,6 @@ Name: "{group}\{#MyAppName} console"; Filename: "{app}\fontforge.bat"
 Name: "{group}\{#MyAppName} interactive console"; Filename: "{app}\fontforge-console.bat"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
 
 [Registry]
 ;Root: HKLM; Subkey: "Software\FontForge"; Flags: uninsdeletekey
@@ -148,7 +159,7 @@ begin
     ExtensionsToDelete := TStringList.Create;
     ExtensionsToDelete.Add('.pyc');
     ExtensionsToDelete.Add('.pyo');
-    RecursiveDelete('{app}\lib\python2.7', '*.py*', ExtensionsToDelete);
+    RecursiveDelete('{app}\lib\python3.*', '*.py*', ExtensionsToDelete);
     ExtensionsToDelete.Free;
   end;
 end;
