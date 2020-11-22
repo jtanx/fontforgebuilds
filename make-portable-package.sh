@@ -71,7 +71,7 @@ if [ -z "$FFPATH" ]; then
     FFPATH=$WORK/fontforge
 fi
 
-version_hash=`git -C $FFPATH rev-parse master -- || git -C $FFPATH rev-parse HEAD --`
+version_hash=`git -C $FFPATH rev-parse master -- || git -C $FFPATH log --pretty=format:%H -n 1`
 version_hash=${version_hash:0:6}
 log_status "Version hash is $version_hash"
 log_status "Working directory: `pwd`"
