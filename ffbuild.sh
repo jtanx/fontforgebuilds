@@ -11,6 +11,7 @@ nomake=0
 yes=0
 makedebug=0
 appveyor=0
+ghactions=0
 depsonly=0
 github="fontforge"
 
@@ -25,6 +26,7 @@ function dohelp() {
     echo "  -d, --makedebug      Adds in debugging utilities into the build (adds a gdb"
     echo "                       automation script)"
     echo "  -a, --appveyor       AppVeyor specific settings (in-source build)"
+    echo "  --github-actions     GitHub Actions specific settings (in-source build)"
     echo "  -l, --depsonly       Only install the dependencies and not FontForge itself."
     exit $1
 }
@@ -102,6 +104,8 @@ while getopts "$optspec" optchar; do
                     makedebug=$((1-makedebug)) ;;
                 appveyor)
                     appveyor=$((1-appveyor)) ;;
+                github-actions)
+                    ghactions=$((1-ghactions)) ;;
                 depsonly)
                     depsonly=$((1-depsonly)) ;;
                 yes)
@@ -181,9 +185,14 @@ PYINST=python3
 # Check for AppVeyor specific settings
 if (($appveyor)); then
     yes=1
-    FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
     TAR="tar axf"
     export PYTHONHOME=/$MINGVER
+    FFPATH=`cygpath -m $APPVEYOR_BUILD_FOLDER`
+elif (($ghactions)); then
+    yes=1
+    TAR="tar axf"
+    export PYTHONHOME=/$MINGVER
+    FFPATH=`cygpath -m $GITHUB_WORKSPACE/repo`
 else
     FFPATH=$WORK/fontforge
     TAR="tar axvf"
@@ -231,7 +240,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     IOPTS="-S --noconfirm --needed"
 
-    if (( $appveyor )); then
+    if (( $appveyor+$ghactions )); then
         # Try to fix python issues
         pacman -Rcns --noconfirm $PMPREFIX-python3
         # Upgrade gcc
@@ -310,7 +319,7 @@ if (( ! $nomake )); then
 
     log_status "Finished installing prerequisites, attempting to install FontForge!"
     # fontforge
-    if (( ! $appveyor )) && [ ! -d fontforge ]; then
+    if (( ! ($appveyor+$ghactions) )) && [ ! -d fontforge ]; then
             if [ -d "$BASE/work/$MINGOTHER/fontforge" ]; then
                 log_status "Found copy from other arch build, performing local clone..."
                 # Don't use git clone - need the remotes for updating
@@ -331,13 +340,13 @@ if (( ! $nomake )); then
         if [ ! -f build/fontforge.configure-complete ] || (($reconfigure)); then
             log_status "Running the configure script..."
             
-            if (($appveyor)); then
+            if (($appveyor+$ghactions)); then
                 log_note "Ensuring sphinx is present..."
                 pip install sphinx typing # workaround for https://github.com/msys2/MINGW-packages/issues/7227
                 EXTRA_CMAKE_OPTS="-DENABLE_FONTFORGE_EXTRAS=yes -DENABLE_DOCS=yes"
             else
                 log_note "Will use ccache when building FontForge"
-                EXTRA_CMAKE_OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache"
+                EXTRA_CMAKE_OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug"
             fi
 
             mkdir -p build && cd build
@@ -355,7 +364,7 @@ if (( ! $nomake )); then
         log_status "Compiling FontForge..."
         time ninja -C build || bail "FontForge build"
 
-        if (($appveyor)); then
+        if (($appveyor+$ghactions)); then
             log_status "Running the test suite..."
             CTEST_PARALLEL_LEVEL=100 ninja -C build check || bail "FontForge check"
         fi
@@ -395,7 +404,7 @@ if (( ! $nomake )); then
         log_status "Compiling FontForge..."
         time make -j$(($(nproc)+1)) || bail "FontForge make"
 
-        if (($appveyor)); then
+        if (($appveyor+$ghactions)); then
             log_status "Running the test suite..."
             make check -j$(($(nproc)+1)) || bail "FontForge check"
         fi
@@ -533,7 +542,7 @@ log_status "Generating the version file..."
 current_date=`date "+%c %z"`
 actual_branch=`git -C $FFPATH rev-parse --abbrev-ref HEAD`
 actual_hash=`git -C $FFPATH rev-parse HEAD`
-if (($appveyor)); then
+if (($appveyor+$ghactions)); then
     version_hash=`git -C $FFPATH ls-remote origin master | awk '{ printf $1 }'`
 else
     version_hash=`git -C $FFPATH rev-parse master`
