@@ -157,7 +157,8 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     MINGVER=mingw32
     MINGOTHER=mingw64
     HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
-    PMPREFIX="mingw-w64-i686"
+    PMARCH=i686
+    PMPREFIX="mingw-w64-$PMARCH"
     POTRACE_DIR="potrace-1.15.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
@@ -166,7 +167,8 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     MINGVER=mingw64
     MINGOTHER=mingw32
     HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
-    PMPREFIX="mingw-w64-x86_64"
+    PMARCH=x86_64
+    PMPREFIX="mingw-w64-$PMARCH"
     POTRACE_DIR="potrace-1.15.win64"
 else
     bail "Unknown build system!"
@@ -255,6 +257,12 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip,$PYINST-setuptools}
+
+    if (( $appveyor+$ghactions )); then
+        # Temp fix for cmake 3.20.0 having broken FindIntl
+        pacman -U --noconfirm http://repo.msys2.org/mingw/$PMARCH/$PMPREFIX-cmake-3.19.3-3-any.pkg.tar.zst http://repo.msys2.org/mingw/$PMARCH/$PMPREFIX-cmake-3.19.3-3-any.pkg.tar.zst.sig
+        pacman -U --noconfirm http://repo.msys2.org/mingw/$PMARCH/$PMPREFIX-cmake-3.19.3-3-any.pkg.tar.zst
+    fi
 
     log_status "Installing precompiled devel libraries..."
     # Libraries
