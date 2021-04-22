@@ -53,10 +53,10 @@ function bail () {
 }
 
 function detect_arch_switch () {
-    local from=".building-$1"
-    local to=".building-$2"
-
-    if [ -f "$from" ]; then
+    local from="$(ls -1 .building-* 2>/dev/null)"
+    local to=".building-$1"
+    
+    if [ ! -z "$from" ] && [ "$from" != "$to" ]; then
         if (($yes)); then
             git clean -dxf "$RELEASE" || bail "Could not reset ReleasePackage"
         else
@@ -170,12 +170,22 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     PMARCH=x86_64
     PMPREFIX="mingw-w64-$PMARCH"
     POTRACE_DIR="potrace-1.15.win64"
+elif [ "$MSYSTEM" = "UCRT64" ]; then
+    log_note "Building 64-bit ucrt version!"
+    
+    ARCHNUM="64"
+    MINGVER=ucrt64
+    MINGOTHER=mingw32
+    HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
+    PMARCH=ucrt-x86_64
+    PMPREFIX="mingw-w64-$PMARCH"
+    POTRACE_DIR="potrace-1.15.win64"
 else
     bail "Unknown build system!"
 fi
 
 # Early detection
-detect_arch_switch $MINGOTHER $MINGVER
+detect_arch_switch $MINGVER
 
 # Common options
 TARGET=$BASE/target/$MINGVER/
@@ -250,19 +260,13 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     fi
 
     # Install the base MSYS packages needed
-    pacman $IOPTS diffutils findutils make patch tar pkg-config winpty
+    pacman $IOPTS diffutils findutils make patch tar pkgconf winpty
 
     # Install MinGW related stuff
     pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja,ccache}
 
     ## Other libs
     pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip,$PYINST-setuptools}
-
-    if (( $appveyor+$ghactions )); then
-        # Temp fix for cmake 3.20.0 having broken FindIntl
-        pacman -U --noconfirm http://repo.msys2.org/mingw/$PMARCH/$PMPREFIX-cmake-3.19.3-3-any.pkg.tar.zst http://repo.msys2.org/mingw/$PMARCH/$PMPREFIX-cmake-3.19.3-3-any.pkg.tar.zst.sig
-        pacman -U --noconfirm http://repo.msys2.org/mingw/$PMARCH/$PMPREFIX-cmake-3.19.3-3-any.pkg.tar.zst
-    fi
 
     log_status "Installing precompiled devel libraries..."
     # Libraries
