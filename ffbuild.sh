@@ -148,6 +148,7 @@ SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
 DBSYMBOLS=$BASE/debugging-symbols/.debug/
+POTRACE_VERSION=1.16
 
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then
@@ -159,7 +160,6 @@ if [ "$MSYSTEM" = "MINGW32" ]; then
     HOST="--build=i686-w64-mingw32 --host=i686-w64-mingw32 --target=i686-w64-mingw32"
     PMARCH=i686
     PMPREFIX="mingw-w64-$PMARCH"
-    POTRACE_DIR="potrace-1.15.win32"
 elif [ "$MSYSTEM" = "MINGW64" ]; then
     log_note "Building 64-bit version!"
 
@@ -169,7 +169,6 @@ elif [ "$MSYSTEM" = "MINGW64" ]; then
     HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
     PMARCH=x86_64
     PMPREFIX="mingw-w64-$PMARCH"
-    POTRACE_DIR="potrace-1.15.win64"
 elif [ "$MSYSTEM" = "UCRT64" ]; then
     log_note "Building 64-bit ucrt version!"
     
@@ -179,7 +178,6 @@ elif [ "$MSYSTEM" = "UCRT64" ]; then
     HOST="--build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32"
     PMARCH=ucrt-x86_64
     PMPREFIX="mingw-w64-$PMARCH"
-    POTRACE_DIR="potrace-1.15.win64"
 else
     bail "Unknown build system!"
 fi
@@ -191,7 +189,7 @@ detect_arch_switch $MINGVER
 TARGET=$BASE/target/$MINGVER/
 WORK=$BASE/work/$MINGVER/
 PMTEST="$BASE/.pacman-$MINGVER-installed"
-POTRACE_ARC="$POTRACE_DIR.tar.gz"
+POTRACE_NAME="potrace-${POTRACE_VERSION}.win${ARCHNUM}"
 PYINST=python3
 
 # Check for AppVeyor specific settings
@@ -238,10 +236,8 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     # We also only do gdk builds now
     #if ! grep -q fontforgelibs /etc/pacman.conf; then
     #    log_note "Adding the fontforgelibs repo..."
-    #    echo -ne "\n[fontforgelibs32]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs32\n" >> /etc/pacman.conf
-    #    echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
-    #    echo -ne "[fontforgelibs64]\nServer = https://dl.bintray.com/jtanx/fontforgelibs/fontforgelibs64\n" >> /etc/pacman.conf
-    #    echo -ne "Server = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
+    #    echo -ne "\n[fontforgelibs32]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/i686\n" >> /etc/pacman.conf
+    #    echo -ne "[fontforgelibs64]\nServer = http://downloads.sourceforge.net/project/fontforgebuilds/build-system-extras/fontforgelibs/x86_64\n" >> /etc/pacman.conf
     #    # This option has the tendency to fail depending on the server it connects to.
     #    # Retry up to 5 times before falling over.
     #    for i in {1..5}; do pacman-key -r 90F90C4A && break || sleep 2; done
@@ -301,7 +297,7 @@ log_status "Retrieving supplementary archives (if necessary)"
 get_archive "$SOURCE/$FREETYPE_ARCHIVE" \
             "http://download.savannah.gnu.org/releases/freetype/$FREETYPE_ARCHIVE" \
             "https://sourceforge.net/projects/freetype/files/freetype2/${FREETYPE_VERSION}/${FREETYPE_ARCHIVE}" || bail "FreeType2 archive retreival"
-get_archive "$BINARY/$POTRACE_ARC" "https://dl.bintray.com/jtanx/fontforgelibs/build-system-extras/${POTRACE_ARC}" || bail "Potrace retrieval"
+get_archive "$BINARY/$POTRACE_NAME.tar.gz" "http://potrace.sourceforge.net/download/${POTRACE_VERSION}/${POTRACE_NAME}.tar.gz" || bail "Potrace retrieval"
 
 cd $WORK
 
@@ -453,10 +449,10 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     mkdir -p potrace
     cd potrace
 
-    if [ ! -d $POTRACE_DIR ]; then
+    if [ ! -d $POTRACE_NAME ]; then
         $TAR "$BINARY/$POTRACE_ARC"
     fi
-    strip $POTRACE_DIR/potrace.exe -so $RELEASE/bin/potrace.exe
+    strip $POTRACE_NAME/potrace.exe -so $RELEASE/bin/potrace.exe
     cd ..
 fi
 
