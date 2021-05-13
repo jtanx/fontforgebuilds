@@ -450,7 +450,7 @@ if [ ! -f $RELEASE/bin/potrace.exe ]; then
     cd potrace
 
     if [ ! -d $POTRACE_NAME ]; then
-        $TAR "$BINARY/$POTRACE_ARC"
+        $TAR "$BINARY/$POTRACE_NAME.tar.gz"
     fi
     strip $POTRACE_NAME/potrace.exe -so $RELEASE/bin/potrace.exe
     cd ..
