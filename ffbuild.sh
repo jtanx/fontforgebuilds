@@ -490,7 +490,7 @@ if [ -d "$RELEASE/lib/$PYVER" ]; then
 else
     if [ ! -d "$BINARY/$PYVER" ]; then
         log_note "Python folder not found - running 'strip-python'..."
-        $BASE/strip-python.sh "$PYVER" > /dev/null
+        $BASE/strip-python.sh "$PYVER" || bail "Python generation failed"
     fi
     cp -r "$BINARY/$PYVER" "$RELEASE/lib" || bail "Python folder could not be copied"
 fi

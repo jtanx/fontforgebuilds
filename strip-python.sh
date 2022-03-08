@@ -29,9 +29,9 @@ cd original-archives/binaries || exit 1
 echo "Python: $PYNAME $PYFULLVER ($PYVER): $PYARCH"
 
 if [ ! -d $PYVER ]; then
-    tar axf "/var/cache/pacman/pkg/$PYNAME-$PYFULLVER-any.pkg.tar."* --strip-components=2 --wildcards '*/lib/python3.*'
-    tar axf "/var/cache/pacman/pkg/$PIP_PACKAGE-$PIPVER-any.pkg.tar."* --strip-components=2 --wildcards '*/lib/python3.*'
-    tar axf "/var/cache/pacman/pkg/$SETUPTOOLS_PACKAGE-$SETUPTOOLSVER-any.pkg.tar."* --strip-components=2 --wildcards '*/lib/python3.*'
+    tar axf "/var/cache/pacman/pkg/$PYNAME-$PYFULLVER-any.pkg.tar.zst" --strip-components=2 --wildcards '*/lib/python3.*'
+    tar axf "/var/cache/pacman/pkg/$PIP_PACKAGE-$PIPVER-any.pkg.tar.zst" --strip-components=2 --wildcards '*/lib/python3.*'
+    tar axf "/var/cache/pacman/pkg/$SETUPTOOLS_PACKAGE-$SETUPTOOLSVER-any.pkg.tar.zst" --strip-components=2 --wildcards '*/lib/python3.*'
 fi
 
 cd $PYVER
