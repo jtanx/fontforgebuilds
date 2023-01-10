@@ -1,5 +1,7 @@
+10/01/22:
+* Resync with latest master for the 20230101 release
 08/03/22:
-* Resync with latest master for te 20220308 release
+* Resync with latest master for the 20220308 release
 07/11/20:
 * Resync with latest master for the 20201107 release
 14/03/20:
