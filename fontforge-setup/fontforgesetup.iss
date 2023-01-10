@@ -12,12 +12,15 @@
 # if MSYSTEM == "MINGW64"
 #  define ARCH="x64"
 #  define ARCHDESC="x64"
-#  define MyAppName "FontForge (64-bit)"
+#  define ARCHBITS="64"
+#  define OTHERBITS="32"
 # endif
 #endif
 #ifndef ARCH
 # define ARCH=""
 # define ARCHDESC="x86"
+# define ARCHBITS="32"
+# define OTHERBITS="64"
 #endif
 
 [Setup]
@@ -194,15 +197,26 @@ var
   sUnInstallString: String;
   sUnInstallVersion: String;
   aUnInstallVersionParts: TArrayOfString;
+  bIsOtherArch: Boolean;
 begin
-  sUnInstKey := HKLM;
+  sUnInstKey := HKLM{#ARCHBITS};
   sUnInstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\{#emit SetupSetting("AppId")}_is1');
   sUnInstallString := '';
+  bIsOtherArch := false;
   if not RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString) then begin
-    sUnInstKey := HKCU;
-    RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString);
+    sUnInstKey := HKCU{#ARCHBITS};
+    if not RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString) then begin
+      sUnInstKey := HKLM{#OTHERBITS};
+      if not RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString) then begin
+        sUnInstKey := HKCU{#OTHERBITS};
+        RegQueryStringValue(sUnInstKey, sUnInstPath, 'UninstallString', sUnInstallString);
+      end;
+      if sUninstallString <> '' then begin
+        bIsOtherArch := true;
+      end;
+    end;
   end;
-  if sUninstallString <> '' then
+  if (sUninstallString <> '') and (not bIsOtherArch) then
   begin
     RegQueryStringValue(sUnInstKey, sUnInstPath, 'DisplayVersion', sUnInstallVersion);
     aUnInstallVersionParts := StrSplit(sUnInstallVersion, '-');
