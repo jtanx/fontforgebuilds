@@ -13,6 +13,7 @@ makedebug=0
 appveyor=0
 ghactions=0
 depsonly=0
+qt=0
 github="fontforge"
 
 function dohelp() {
@@ -25,6 +26,7 @@ function dohelp() {
     echo "  -y, --yes            Say yes to all build script prompts"
     echo "  -d, --makedebug      Adds in debugging utilities into the build (adds a gdb"
     echo "                       automation script)"
+    echo "  -t, --qt             Builds the UI using Qt instead of GDK"
     echo "  -a, --appveyor       AppVeyor specific settings (in-source build)"
     echo "  --github-actions     GitHub Actions specific settings (in-source build)"
     echo "  -l, --depsonly       Only install the dependencies and not FontForge itself."
@@ -110,6 +112,8 @@ while getopts "$optspec" optchar; do
                     depsonly=$((1-depsonly)) ;;
                 yes)
                     yes=$((1-yes)) ;;
+                qt)
+                    qt=$((1-qt)) ;;
                 github)
                     github="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )) ;;
                 help)
@@ -130,6 +134,8 @@ while getopts "$optspec" optchar; do
             depsonly=$((1-depsonly)) ;;
         y)
             yes=$((1-yes)) ;;
+        t)
+            qt=$((1-qt)) ;;
         g)
             github="${!OPTIND}"; OPTIND=$(( $OPTIND + 1 )) ;;
         h)
@@ -268,7 +274,13 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     # Libraries
     pacman $IOPTS $PMPREFIX-{libspiro,libuninameslist}
     pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2}
-    pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz,woff2,gtk3}
+    pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz,woff2}
+    
+    if (($qt)); then
+        pacman $IOPTS $PMPREFIX-{qt6,qt6-tools}
+    else
+        pacman $IOPTS $PMPREFIX-gtk3
+    fi
 
     touch $PMTEST
     log_note "Finished installing precompiled libraries!"
@@ -353,6 +365,10 @@ if (( ! $nomake )); then
             else
                 log_note "Will use ccache when building FontForge"
                 EXTRA_CMAKE_OPTS="-DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_BUILD_TYPE=Debug"
+            fi
+            
+            if (($qt)); then
+                EXTRA_CMAKE_OPTS="-DENABLE_QT=yes"
             fi
 
             mkdir -p build && cd build
@@ -543,6 +559,11 @@ for f in $fflibs; do
         objcopy --add-gnu-debuglink="$DBSYMBOLS/$filenoext.debug" "$RELEASE/bin/$filename"
     fi
 done
+
+if (($qt)); then
+    log_status "Running windeployqt..."
+    windeployqt-qt6 "$RELEASE/bin/fontforge.exe"
+fi
 
 log_status "Generating the version file..."
 current_date=`date "+%c %z"`
