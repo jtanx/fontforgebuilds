@@ -1,3 +1,6 @@
+13/01/22:
+* Ensure uninstall of incompatible versions (particularly if changing from 32-bit to 64-bit and vice versa)
+* Change install version to match release tags (YYYYMMDD instead of DD-MM-YY)
 10/01/22:
 * Resync with latest master for the 20230101 release
 08/03/22:

@@ -3,10 +3,12 @@
 
 #define MyAppName "FontForge"
 #define MyAppFolder "FontForgeBuilds"
-#define MyAppVersion GetDateTimeString('dd-mm-yyyy', '', '');
+#define MyAppVersion GetDateTimeString('yyyymmdd', '', '');
+#define MyAppVersionDesc GetDateTimeString('yyyy-mm-dd', '', '');
 #define MyAppPublisher "FontForgeBuilds"
 #define MyAppURL "http://www.fontforge.org"
 #define MyAppExeName "run_fontforge.exe"
+#define MyInstallEpoch "1"
 
 #ifdef MSYSTEM
 # if MSYSTEM == "MINGW64"
@@ -41,7 +43,7 @@ DefaultGroupName={#MyAppName}
 AllowNoIcons=yes
 InfoBeforeFile=..\ReleasePackage\VERSION.txt
 OutputDir=.
-OutputBaseFilename=FontForgeSetup-{#MyAppVersion}-{#ARCHDESC}
+OutputBaseFilename=FontForge-{#MyAppVersionDesc}-Windows-{#ARCHDESC}
 SetupIconFile=Graphics\fontforge-installer-icon.ico
 ;WizardImageFile=Graphics\fontforge-wizard.bmp
 WizardSmallImageFile=Graphics\fontforge-wizard.bmp
@@ -169,34 +171,12 @@ end;
 
 
 /////////////////////////////////////////////////////////////////////
-function StrSplit(Text: String; Separator: String): TArrayOfString;
-var
-  i, p: Integer;
-  Dest: TArrayOfString;
-begin
-  i := 0;
-  repeat
-    SetArrayLength(Dest, i+1);
-    p := Pos(Separator,Text);
-    if p > 0 then begin
-      Dest[i] := Copy(Text, 1, p-1);
-      Text := Copy(Text, p + Length(Separator), Length(Text));
-      i := i + 1;
-    end else begin
-      Dest[i] := Text;
-      Text := '';
-    end;
-  until Length(Text)=0;
-  Result := Dest
-end;
-
 function GetUninstallString(): String;
 var
   sUnInstKey: Integer;
   sUnInstPath: String;
   sUnInstallString: String;
-  sUnInstallVersion: String;
-  aUnInstallVersionParts: TArrayOfString;
+  sPreviousInstallEpoch: String;
   bIsOtherArch: Boolean;
 begin
   sUnInstKey := HKLM{#ARCHBITS};
@@ -218,12 +198,10 @@ begin
   end;
   if (sUninstallString <> '') and (not bIsOtherArch) then
   begin
-    RegQueryStringValue(sUnInstKey, sUnInstPath, 'DisplayVersion', sUnInstallVersion);
-    aUnInstallVersionParts := StrSplit(sUnInstallVersion, '-');
-
-    // Only force uninstall of pre 2019 (non GDK) builds
-    if (GetArrayLength(aUnInstallVersionParts) = 3) and (CompareText(aUnInstallVersionParts[2], '2017') > 0) then begin
-      sUninstallString := '';
+    sPreviousInstallEpoch := GetPreviousData('InstallEpoch', '')
+    Log('Previous install epoch is: ' + sPreviousInstallEpoch  + ' vs current: {#MyInstallEpoch}')
+    if sPreviousInstallEpoch = '{#MyInstallEpoch}' then begin
+        sUninstallString := '';
     end
   end;
   Result := sUnInstallString;
@@ -280,6 +258,11 @@ begin
   end;
 end;
 
+procedure RegisterPreviousData(PreviousDataKey: Integer);
+begin
+  SetPreviousData(PreviousDataKey, 'InstallEpoch', '{#MyInstallEpoch}');
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if (CurStep=ssInstall) then
@@ -293,11 +276,3 @@ begin
     end;
   end;
 end;
-
-//procedure CurStepChanged(CurStep: TSetupStep);
-//begin
-//  if CurStep=ssPostInstall then begin
-//     RegWriteStringValue(HKEY_LOCAL_MACHINE, 'Software\FontForge',
-//						 'InstallPath', ExpandConstant('{app}'));
-//  end;
-//end;
