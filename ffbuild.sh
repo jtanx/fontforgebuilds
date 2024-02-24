@@ -154,7 +154,6 @@ SOURCE=$BASE/original-archives/sources/
 BINARY=$BASE/original-archives/binaries/
 RELEASE=$BASE/ReleasePackage/
 DBSYMBOLS=$BASE/debugging-symbols/.debug/
-POTRACE_VERSION=1.16
 
 # Determine if we're building 32 or 64 bit.
 if [ "$MSYSTEM" = "MINGW32" ]; then
@@ -195,7 +194,6 @@ detect_arch_switch $MINGVER
 TARGET=$BASE/target/$MINGVER/
 WORK=$BASE/work/$MINGVER/
 PMTEST="$BASE/.pacman-$MINGVER-installed"
-POTRACE_NAME="potrace-${POTRACE_VERSION}.win${ARCHNUM}"
 PYINST=python3
 
 # Check for AppVeyor specific settings
@@ -273,7 +271,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     log_status "Installing precompiled devel libraries..."
     # Libraries
     pacman $IOPTS $PMPREFIX-{libspiro,libuninameslist}
-    pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2}
+    pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2,potrace}
     pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz,woff2}
     
     if (($qt)); then
@@ -309,7 +307,6 @@ log_status "Retrieving supplementary archives (if necessary)"
 get_archive "$SOURCE/$FREETYPE_ARCHIVE" \
             "http://download.savannah.gnu.org/releases/freetype/$FREETYPE_ARCHIVE" \
             "https://sourceforge.net/projects/freetype/files/freetype2/${FREETYPE_VERSION}/${FREETYPE_ARCHIVE}" || bail "FreeType2 archive retreival"
-get_archive "$BINARY/$POTRACE_NAME.tar.gz" "http://potrace.sourceforge.net/download/${POTRACE_VERSION}/${POTRACE_NAME}.tar.gz" || bail "Potrace retrieval"
 
 cd $WORK
 
@@ -376,6 +373,7 @@ if (( ! $nomake )); then
                 -DCMAKE_INSTALL_PREFIX="$TARGET" \
                 -DENABLE_FREETYPE_DEBUGGER="$WORK/$FREETYPE_NAME" \
                 -DENABLE_LIBREADLINE=no \
+                -DPython3_EXECUTABLE=/$MINGVER/bin/python.exe \
                 $EXTRA_CMAKE_OPTS \
                 .. \
                 || bail "FontForge configure"
@@ -462,14 +460,7 @@ cd $WORK
 # potrace - http://potrace.sourceforge.net/#downloading
 if [ ! -f $RELEASE/bin/potrace.exe ]; then
     log_status "Installing potrace..."
-    mkdir -p potrace
-    cd potrace
-
-    if [ ! -d $POTRACE_NAME ]; then
-        $TAR "$BINARY/$POTRACE_NAME.tar.gz"
-    fi
-    strip $POTRACE_NAME/potrace.exe -so $RELEASE/bin/potrace.exe
-    cd ..
+    strip "/$MINGVER/bin/potrace.exe" -so $RELEASE/bin/potrace.exe
 fi
 
 
@@ -533,7 +524,7 @@ log_note "The executable: $ffex"
 log_note "MSYS root: $MSYSROOT"
 log_note "FFEX root: $FFEXROOT"
 
-fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" $RELEASE/lib/$PYVER/lib-dynload/*.dll \
+fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" $RELEASE/lib/$PYVER/lib-dynload/*.dll $RELEASE/bin/potrace.exe \
 | grep =.*dll \
 | sed -e '/^[^\t]/ d'  \
 | sed -e 's/\t//'  \
