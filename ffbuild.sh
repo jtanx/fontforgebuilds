@@ -280,7 +280,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     if (($qt)); then
         pacman $IOPTS $PMPREFIX-{qt6,qt6-tools}
     else
-        pacman $IOPTS $PMPREFIX-gtk3
+        pacman $IOPTS $PMPREFIX-{gtk3,gtkmm3}
     fi
 
     touch $PMTEST
