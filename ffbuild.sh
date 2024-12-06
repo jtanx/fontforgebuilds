@@ -266,11 +266,14 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     pacman $IOPTS $PMPREFIX-{gcc,gmp,ntldd-git,gettext,libiconv,cmake,ninja,ccache}
 
     ## Other libs
-    pacman $IOPTS $PMPREFIX-{$PYINST,$PYINST-pip,$PYINST-setuptools}
+    pacman $IOPTS $PMPREFIX-$PYINST
+    pacman $IOPTS $PMPREFIX-$PYINST-pip
+    pacman $IOPTS $PMPREFIX-$PYINST-setuptools
 
     log_status "Installing precompiled devel libraries..."
     # Libraries
-    pacman $IOPTS $PMPREFIX-{libspiro,libuninameslist}
+    pacman $IOPTS $PMPREFIX-libspiro
+    pacman $IOPTS $PMPREFIX-libuninameslist
     pacman $IOPTS $PMPREFIX-{zlib,libpng,giflib,libtiff,libjpeg-turbo,libxml2,potrace}
     pacman $IOPTS $PMPREFIX-{freetype,fontconfig,glib2,pixman,harfbuzz,woff2}
     
