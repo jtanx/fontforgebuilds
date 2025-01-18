@@ -248,7 +248,7 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     #    pacman-key --lsign-key 90F90C4A || bail "Could not add fontforgelibs signing key"
     #fi
 
-    pacman -Sy --noconfirm
+    pacman -Syy --noconfirm
 
     IOPTS="-S --noconfirm --needed"
 
