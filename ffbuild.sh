@@ -194,7 +194,7 @@ detect_arch_switch $MINGVER
 TARGET=$BASE/target/$MINGVER/
 WORK=$BASE/work/$MINGVER/
 PMTEST="$BASE/.pacman-$MINGVER-installed"
-PYINST=python3
+PYINST=python
 
 # Check for AppVeyor specific settings
 if (($appveyor)); then
