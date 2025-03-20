@@ -281,7 +281,12 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
         pacman $IOPTS $PMPREFIX-{qt6,qt6-tools}
     else
         pacman $IOPTS $PMPREFIX-gtk3
-        pacman $IOPTS $PMPREFIX-gtkmm3
+        if [ "$MSYSTEM" = "MINGW32" ]; then
+	    log_note "GTKMM3 deprecated on mingw32 architecture, installing local package."
+	    pacman -U --noconfirm $BASE/packages/mingw-w64-i686-gtkmm3-3.24.9-1-any.pkg.tar.zst
+	else
+            pacman $IOPTS $PMPREFIX-gtkmm3
+	fi
     fi
 
     touch $PMTEST
