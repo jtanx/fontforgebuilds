@@ -483,11 +483,6 @@ if [ -z "$(ls -A "$UIFONTS" 2>&1 | grep -v "\\.txt$")" ]; then
     cp $TARGET/share/fontforge/pixmaps/Cantarell* "$RELEASE/share/fonts"
 fi
 
-if [ -f "$PATCH/fontforge.resources" ]; then
-    log_status "Copying the custom resource file..."
-    cp "$PATCH/fontforge.resources" "$RELEASE/share/fontforge/pixmaps/resources"
-fi
-
 log_status "Copying sfd icon..."
 cp "$PATCH/artwork/sfd-icon.ico" "$RELEASE/share/fontforge/"
 
