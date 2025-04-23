@@ -551,7 +551,7 @@ log_note "The executable: $ffex"
 log_note "MSYS root: $MSYSROOT"
 log_note "FFEX root: $FFEXROOT"
 
-fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" $RELEASE/lib/$PYVER/lib-dynload/*.dll $RELEASE/bin/potrace.exe \
+fflibs=`ntldd -D "$(dirname \"${ffex}\")" -R "$ffex" $RELEASE/lib/$PYVER/lib-dynload/*.dll $RELEASE/lib/gdk-pixbuf-2.0/*/loaders/*.dll $RELEASE/bin/potrace.exe \
 | grep =.*dll \
 | sed -e '/^[^\t]/ d'  \
 | sed -e 's/\t//'  \
