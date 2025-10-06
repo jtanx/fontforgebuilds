@@ -282,8 +282,13 @@ if (( ! $nomake )) && [ ! -f $PMTEST ]; then
     else
         pacman $IOPTS $PMPREFIX-gtk3
         if [ "$MSYSTEM" = "MINGW32" ]; then
-	    log_note "GTKMM3 deprecated on mingw32 architecture, installing local package."
-	    pacman -U --noconfirm $BASE/packages/mingw-w64-i686-gtkmm3-3.24.9-1-any.pkg.tar.zst
+	    log_note "Some packages are deprecated on mingw32 architecture."
+	    log_note "Installing local binary packages: glibmm, atkmm, pangomm, gtkmm3."
+	    pacman -U --noconfirm \
+	        $BASE/packages/mingw-w64-i686-glibmm-2.66.8-2-any.pkg.tar.zst \
+	        $BASE/packages/mingw-w64-i686-atkmm-2.28.4-2-any.pkg.tar.zst \
+	        $BASE/packages/mingw-w64-i686-pangomm-2.46.4-2-any.pkg.tar.zst \
+	        $BASE/packages/mingw-w64-i686-gtkmm3-3.24.10-3-any.pkg.tar.zst
 	else
             pacman $IOPTS $PMPREFIX-gtkmm3
 	fi
